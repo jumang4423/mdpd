@@ -1,6 +1,6 @@
-# 💫 osc test
+# osc test
 
-oscillator synthesis & hsl slide test
+oscillator synthesis & hsl slide & bang test
 
 ## patch demo
 

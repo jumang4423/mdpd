@@ -16,7 +16,7 @@ const RenderPdInputHtml = (pdInput: PdInput, prefix: string): string => {
     return `
 <div>
   - ${pdInput.name}:
-  <button id="bng_${prefix}_${pdInput.nodeId}">x</button>
+  <button id="bng_${prefix}_${pdInput.nodeId}">o</button>
 </div>
 `;
   } else {
@@ -66,7 +66,6 @@ const initHsl_${prefix}_${pdInput.nodeId} = () => {
 `;
   }
   if (pdInput.objectType === InputType.bng) {
-    // TOOD: implement
     return `
 const initBng_${prefix}_${pdInput.nodeId} = () => {
 }
@@ -83,7 +82,6 @@ initHsl_${prefix}_${pdInput.nodeId}()
 `;
   }
   if (pdInput.objectType === InputType.bng) {
-    // TOOD: implement
     return `
 initBng_${prefix}_${pdInput.nodeId}()
 `;
@@ -121,7 +119,6 @@ const customRenderer = (baseDir: string) => {
   </div>
   ${pdInputs.map((pdInput) => RenderPdInputHtml(pdInput, prefix)).join("\n")}
 </div>
-<script src="webpd-runtime.js"></script>
 <script>
 let audioContext_${prefix} = null
 
@@ -243,6 +240,7 @@ volume_${prefix}.oninput = (e) => {
           font-family: 'Iosevka', monospace;
         }
       </style>
+      <script src="webpd-runtime.js"></script>
       <div>
         ${linkElement}
         ${html}
@@ -272,7 +270,7 @@ const forCountPdRenderer = (compileTasks: Array<string>) => {
     const src = token.attrs![token.attrIndex("src")][1];
     if (src.endsWith(".pd")) {
       compileTasks.push(src);
-      return `<div />`;
+      return `<></>`;
     } else {
       return originalImgRender(tokens, idx, options, env, self);
     }

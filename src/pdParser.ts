@@ -164,7 +164,6 @@ export const ListPdInputs = (pdFilePath: string): Array<PdInput> => {
   const pdFile = fs.readFileSync(pdFilePath, "utf8");
   const lines = pdFile.split(";").map((line) => line.replace("\n", ""));
   const parser = new PdParser(lines.map((line) => line.split(" ")));
-  const parsed: Array<PdInput> = parser.parse();
 
-  return parsed;
+  return parser.parse();
 };
