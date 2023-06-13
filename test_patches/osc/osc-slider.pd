@@ -1,0 +1,7 @@
+#N canvas 1157 498 450 300 10;
+#X obj 35 32 hsl 100 19 50 5000 1 1 empty empty frequency -2 -10 0 12 #fcfcfc #000000 #000000 4300 1;
+#X obj 86 96 phasor~;
+#X obj 56 155 dac~;
+#X connect 0 0 1 0;
+#X connect 1 0 2 0;
+#X connect 1 0 2 1;

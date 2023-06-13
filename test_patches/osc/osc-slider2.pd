@@ -1,0 +1,13 @@
+#N canvas 997 486 450 300 10;
+#X obj 42 28 hsl 100 19 30 150 0 1 empty empty frequency -2 -10 0 12 #fcfcfc #000000 #000000 0 1;
+#X obj 50 60 mtof;
+#X obj 88 78 *~;
+#X obj 144 78 osc~ 10;
+#X obj 83 110 osc~ 440;
+#X obj 83 172 dac~;
+#X connect 0 0 1 0;
+#X connect 1 0 2 0;
+#X connect 2 0 4 0;
+#X connect 3 0 2 1;
+#X connect 4 0 5 0;
+#X connect 4 0 5 1;
