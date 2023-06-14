@@ -16,7 +16,7 @@ const RenderPdInputHtml = (pdInput: PdInput, prefix: string): string => {
     return `
 <div>
   - ${pdInput.name}:
-  <button id="bng_${prefix}_${pdInput.nodeId}">o</button>
+  <button id="bng_${prefix}_${pdInput.nodeId}"> bang </button>
 </div>
 `;
   } else {
@@ -30,6 +30,7 @@ const RenderPdInputSendMsgFunction = (
 ): string => {
   if (pdInput.objectType === InputType.hsl) {
     // TODO: inletId always 0??? huh
+    // TODO: use inletId
     return `
 const hsl_${prefix}_${pdInput.nodeId} = document.querySelector("#hsl_${prefix}_${pdInput.nodeId}")
 hsl_${prefix}_${pdInput.nodeId}.oninput = (e) => {
@@ -108,6 +109,9 @@ const customRenderer = (baseDir: string) => {
 #${alt} {
   background-color: #eee;
   padding: 4px;
+}
+#onoff_${prefix} {
+  margin: 4px 4px 4px 0;
 }
 </style>
 <div id="${alt}">
