@@ -4,18 +4,20 @@ import { Option, Some, None } from "ts-results";
 export enum InputType {
   hsl,
   bng,
+  floatatom,
 }
 
-const InputList = ["hsl", "bng"];
+export const InputTypeStr = {
+  [InputType.hsl]: "hsl",
+  [InputType.bng]: "bng",
+  [InputType.floatatom]: "floatatom",
+};
 
 export interface PdInput {
   t: string;
   nodeId: number;
   objectType: InputType;
-  connectedTo: Array<{
-    nodeId: number;
-    inletId: number;
-  }>;
+  activePortlets: Array<number>;
   name: string;
   min?: number;
   max?: number;
@@ -41,11 +43,18 @@ class PdParser {
   }
 
   private isInput(): boolean {
-    return (
+    const isBang =
       this.tokens[this.cur_line][0] === "#X" &&
       this.tokens[this.cur_line][1] === "obj" &&
-      InputList.includes(this.tokens[this.cur_line][4])
-    );
+      this.tokens[this.cur_line][4] === "bng";
+    const isHsl =
+      this.tokens[this.cur_line][0] === "#X" &&
+      this.tokens[this.cur_line][1] === "obj" &&
+      this.tokens[this.cur_line][4] === "hsl";
+    const isFloatatom =
+      this.tokens[this.cur_line][0] === "#X" &&
+      this.tokens[this.cur_line][1] === "floatatom";
+    return isBang || isHsl || isFloatatom;
   }
 
   private isConnect(): boolean {
@@ -56,10 +65,7 @@ class PdParser {
   }
 
   private isObject(): boolean {
-    return (
-      this.tokens[this.cur_line][0] === "#X" &&
-      this.tokens[this.cur_line][1] === "obj"
-    );
+    return this.tokens[this.cur_line][0] === "#X";
   }
 
   parse(): Array<PdInput> {
@@ -78,13 +84,17 @@ class PdParser {
     }
 
     const inletsWithConnections = inlets.map((inlet) => {
-      const connectedTo = connects
-        .filter((connect) => connect.inputNodeId === inlet.nodeId)
-        .map((connect) => ({
-          nodeId: connect.outputNodeId,
-          inletId: connect.outputPortletId,
-        }));
-      return { ...inlet, connectedTo };
+      const connections = connects.filter(
+        (connect) => connect.inputNodeId === inlet.nodeId
+      );
+      const activePortlets = connections.map(
+        (connection) => connection.inputPortletId
+      );
+
+      return {
+        ...inlet,
+        activePortlets,
+      } as PdInput;
     });
 
     return inletsWithConnections;
@@ -106,14 +116,26 @@ class PdParser {
     }
   }
 
+  private getInputType(): string {
+    if (this.tokens[this.cur_line][1] === "obj") {
+      return this.tokens[this.cur_line][4];
+    } else if (this.tokens[this.cur_line][1] === "floatatom") {
+      return "floatatom";
+    } else {
+      throw new Error("Unknown input type");
+    }
+  }
+
   private parseInput(): PdInput {
-    const inputType = this.tokens[this.cur_line][4];
+    const inputType = this.getInputType();
     if (inputType === "hsl") {
       return this.parseHslInput();
     } else if (inputType === "bng") {
       return this.parseBangInput();
+    } else if (inputType === "floatatom") {
+      return this.parseFloatatomInput();
     } else {
-      throw new Error("Unknown inlet type");
+      throw new Error("Unknown input type");
     }
   }
 
@@ -125,7 +147,7 @@ class PdParser {
       t: PdInputT,
       nodeId: this.latestNodeId,
       objectType: InputType.hsl,
-      connectedTo: [],
+      activePortlets: [],
       name,
       min,
       max,
@@ -140,7 +162,18 @@ class PdParser {
       t: PdInputT,
       nodeId: this.latestNodeId,
       objectType: InputType.bng,
-      connectedTo: [],
+      activePortlets: [],
+      name,
+    };
+  }
+
+  private parseFloatatomInput(): PdInput {
+    const name = this.tokens[this.cur_line][8];
+    return {
+      t: PdInputT,
+      nodeId: this.latestNodeId,
+      objectType: InputType.floatatom,
+      activePortlets: [],
       name,
     };
   }

@@ -1,7 +1,7 @@
 import fs from "fs";
 import MarkdownIt from "markdown-it";
 import { GenWasmPatch } from "./webpd";
-import { ListPdInputs, PdInput, InputType } from "./pdParser";
+import { ListPdInputs, PdInput, InputType, InputTypeStr } from "./pdParser";
 
 const RenderPdInputHtml = (pdInput: PdInput, prefix: string): string => {
   if (pdInput.objectType === InputType.hsl) {
@@ -19,30 +19,81 @@ const RenderPdInputHtml = (pdInput: PdInput, prefix: string): string => {
   <button id="bng_${prefix}_${pdInput.nodeId}"> bang </button>
 </div>
 `;
+  } else if (pdInput.objectType === InputType.floatatom) {
+    return `
+<div>
+  - ${pdInput.name}:
+  <input id="floatatom_${prefix}_${pdInput.nodeId}" type="number" value=0> </input>
+</div>
+`;
   } else {
     throw new Error(`unknown input type: ${pdInput.objectType}`);
   }
+};
+
+const msgArgStr = (pdInput: PdInput, isInit: boolean, initStr: any): string => {
+  if (pdInput.objectType === InputType.hsl) {
+    return isInit ? `[${initStr}]` : `[Number(e.target.value)]`;
+  } else if (pdInput.objectType === InputType.bng) {
+    return isInit ? `[]` : `["bang"]`;
+  } else if (pdInput.objectType === InputType.floatatom) {
+    return isInit ? `[]` : `[Number(e.target.value)]`;
+  } else {
+    throw new Error(`unknown input type: ${pdInput.objectType}`);
+  }
+};
+
+const sendMsgFunctions = (
+  pdInput: PdInput,
+  prefix: string,
+  isInit: boolean,
+  initStr: any
+): string => {
+  let lines = "";
+  for (let i = 0; i < pdInput.activePortlets.length; i++) {
+    const portletId = pdInput.activePortlets[i];
+    lines += `
+sendMsgToWebPd_${prefix}("n_0_${pdInput.nodeId}", "${portletId}", ${msgArgStr(
+      pdInput,
+      isInit,
+      initStr
+    )});
+`;
+  }
+  return lines;
 };
 
 const RenderPdInputSendMsgFunction = (
   pdInput: PdInput,
   prefix: string
 ): string => {
+  const objectTypeStr = InputTypeStr[pdInput.objectType];
+
   if (pdInput.objectType === InputType.hsl) {
-    // TODO: inletId always 0??? huh
-    // TODO: use inletId
     return `
-const hsl_${prefix}_${pdInput.nodeId} = document.querySelector("#hsl_${prefix}_${pdInput.nodeId}")
-hsl_${prefix}_${pdInput.nodeId}.oninput = (e) => {
-  sendMsgToWebPd_${prefix}("n_0_${pdInput.nodeId}", "0", [Number(e.target.value)])
+const ${objectTypeStr}_${prefix}_${
+      pdInput.nodeId
+    } = document.querySelector("#${objectTypeStr}_${prefix}_${pdInput.nodeId}")
+${objectTypeStr}_${prefix}_${pdInput.nodeId}.oninput = (e) => {
+  ${sendMsgFunctions(pdInput, prefix, false, null)}
 }
 `;
-  }
-  if (pdInput.objectType === InputType.bng) {
+  } else if (pdInput.objectType === InputType.bng) {
     return `
-const bng_${prefix}_${pdInput.nodeId} = document.querySelector("#bng_${prefix}_${pdInput.nodeId}")
-bng_${prefix}_${pdInput.nodeId}.onclick = (e) => {
-  sendMsgToWebPd_${prefix}("n_0_${pdInput.nodeId}", "0", ["bang"])
+const ${objectTypeStr}_${prefix}_${
+      pdInput.nodeId
+    } = document.querySelector("#${objectTypeStr}_${prefix}_${pdInput.nodeId}")
+${objectTypeStr}_${prefix}_${pdInput.nodeId}.onclick = () => {
+  ${sendMsgFunctions(pdInput, prefix, false, null)}
+}
+`;
+  } else if (pdInput.objectType === InputType.floatatom) {
+    return `
+const ${objectTypeStr}_${prefix}_${
+      pdInput.nodeId
+    } = document.querySelector("#${objectTypeStr}_${prefix}_${pdInput.nodeId}")
+${objectTypeStr}_${prefix}_${pdInput.nodeId}.onchange = (e) => {
+  ${sendMsgFunctions(pdInput, prefix, false, null)}
 }
 `;
   } else {
@@ -61,7 +112,7 @@ const RenderPdInputUIInitFunction = (
 const initHsl_${prefix}_${pdInput.nodeId} = () => {
   hsl_${prefix}_${pdInput.nodeId}.value = ${mid}
   setTimeout(() => {
-    sendMsgToWebPd_${prefix}("n_0_${pdInput.nodeId}", "0", [${mid}])
+    ${sendMsgFunctions(pdInput, prefix, true, mid)}
   }, 100)
 }
 `;
@@ -69,6 +120,11 @@ const initHsl_${prefix}_${pdInput.nodeId} = () => {
   if (pdInput.objectType === InputType.bng) {
     return `
 const initBng_${prefix}_${pdInput.nodeId} = () => {
+}
+`;
+  } else if (pdInput.objectType === InputType.floatatom) {
+    return `
+const initFloatatom_${prefix}_${pdInput.nodeId} = () => {
 }
 `;
   } else {
@@ -85,6 +141,10 @@ initHsl_${prefix}_${pdInput.nodeId}()
   if (pdInput.objectType === InputType.bng) {
     return `
 initBng_${prefix}_${pdInput.nodeId}()
+`;
+  } else if (pdInput.objectType === InputType.floatatom) {
+    return `
+initFloatatom_${prefix}_${pdInput.nodeId}()
 `;
   } else {
     throw new Error(`unknown input type: ${pdInput.objectType}`);
@@ -104,6 +164,7 @@ const customRenderer = (baseDir: string) => {
       const fileName = src.split("/").pop()!;
       const wasmPath = fileName.replace(".pd", ".wasm");
       const prefix = fileName.replace(".pd", "").replace(/[^a-zA-Z0-9_]/g, "_");
+
       return `
 <style>
 #${alt} {

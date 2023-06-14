@@ -1,16 +1,9 @@
 # osc test
 
-oscillator synthesis & hsl slide & bang test
+sound synthesis test markdown for mdpd
 
 ## patch demo
 
-![osc-slider](./osc-slider.pd)
-
-![osc-slider2](./osc-slider2.pd)
-
-![osc-bang](./osc-bang.pd)
+![osc-440](./osc-440.pd)
 
 
-## img demo
-
-![rabbit](https://i.imgur.com/rQXIi3r.gif)
