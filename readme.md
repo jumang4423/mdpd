@@ -1,11 +1,17 @@
- # mdpd
+# mdpd
 
 embed pd patches in markdown
 
- # usage
+# usage
  ```bash
 yarn dev <md file>
  ```
+
+# inputs
+
+- hsl
+- bang
+- floatatom
 
 # installation
 1. install node v18 or higher
