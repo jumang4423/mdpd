@@ -1,4 +1,4 @@
-#N canvas 569 375 602 506 10;
+#N canvas 509 402 602 506 10;
 #X obj 145 13 bng 16 250 50 0 empty empty start 0 -8 0 10 #fcfcfc #000000 #000000;
 #X obj 144 50 metro 100;
 #X obj 111 85 random 12;
@@ -14,7 +14,10 @@
 #X obj 163 236 dac~;
 #X floatatom 298 52 5 0 0 0 left - - 0;
 #X floatatom 392 57 5 0 0 0 right - - 0;
+#X obj 34 135 print;
+#X msg 20 59 melody started;
 #X connect 0 0 1 0;
+#X connect 0 0 16 0;
 #X connect 1 0 2 0;
 #X connect 1 0 3 0;
 #X connect 2 0 4 0;
@@ -29,3 +32,4 @@
 #X connect 11 0 12 1;
 #X connect 13 0 4 1;
 #X connect 14 0 5 1;
+#X connect 16 0 15 0;

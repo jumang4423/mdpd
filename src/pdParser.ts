@@ -42,21 +42,32 @@ class PdParser {
     this.tokens = tokens;
   }
 
-  private isInput(): boolean {
+  // Check if the current line is an input or not
+  private isInput(): Option<string> {
     const isBang =
       this.tokens[this.cur_line][0] === "#X" &&
       this.tokens[this.cur_line][1] === "obj" &&
       this.tokens[this.cur_line][4] === "bng";
+    if (isBang) {
+      return Some("bng");
+    }
     const isHsl =
       this.tokens[this.cur_line][0] === "#X" &&
       this.tokens[this.cur_line][1] === "obj" &&
       this.tokens[this.cur_line][4] === "hsl";
+    if (isHsl) {
+      return Some("hsl");
+    }
     const isFloatatom =
       this.tokens[this.cur_line][0] === "#X" &&
       this.tokens[this.cur_line][1] === "floatatom";
-    return isBang || isHsl || isFloatatom;
+    if (isFloatatom) {
+      return Some("floatatom");
+    }
+    return None;
   }
 
+  // Check if the current line is a connection or not
   private isConnect(): boolean {
     return (
       this.tokens[this.cur_line][0] === "#X" &&
@@ -64,15 +75,18 @@ class PdParser {
     );
   }
 
+  // Check if the current line is an object or not
   private isObject(): boolean {
     return this.tokens[this.cur_line][0] === "#X";
   }
 
+  // Parse the whole file
   parse(): Array<PdInput> {
     const inlets: Array<PdInput> = [];
     const connects: Array<PdConnect> = [];
     while (this.cur_line < this.tokens.length) {
       const line = this.lineParse();
+      // if line is an input
       if (line.some) {
         if (line.val.t === PdInputT) {
           inlets.push(line.val as PdInput);
@@ -101,7 +115,7 @@ class PdParser {
   }
 
   lineParse(): Option<PdInput | PdConnect> {
-    if (this.isInput()) {
+    if (this.isInput().some) {
       const inlet = this.parseInput();
       this.latestNodeId += 1;
       return new Some(inlet);
@@ -116,27 +130,23 @@ class PdParser {
     }
   }
 
-  private getInputType(): string {
-    if (this.tokens[this.cur_line][1] === "obj") {
-      return this.tokens[this.cur_line][4];
-    } else if (this.tokens[this.cur_line][1] === "floatatom") {
-      return "floatatom";
-    } else {
-      throw new Error("Unknown input type");
-    }
-  }
-
   private parseInput(): PdInput {
-    const inputType = this.getInputType();
+    const inputTypeOp = this.isInput();
+    if (inputTypeOp.none) {
+      throw new Error("parseInput called on non-input line");
+    }
+    const inputType = inputTypeOp.val;
     if (inputType === "hsl") {
       return this.parseHslInput();
-    } else if (inputType === "bng") {
-      return this.parseBangInput();
-    } else if (inputType === "floatatom") {
-      return this.parseFloatatomInput();
-    } else {
-      throw new Error("Unknown input type");
     }
+    if (inputType === "bng") {
+      return this.parseBangInput();
+    }
+    if (inputType === "floatatom") {
+      return this.parseFloatatomInput();
+    }
+
+    throw new Error("Input type not found");
   }
 
   private parseHslInput(): PdInput {
@@ -193,6 +203,7 @@ class PdParser {
   }
 }
 
+// from pure data patch, get a list of inputs
 export const ListPdInputs = (pdFilePath: string): Array<PdInput> => {
   const pdFile = fs.readFileSync(pdFilePath, "utf8");
   const lines = pdFile.split(";").map((line) => line.replace("\n", ""));

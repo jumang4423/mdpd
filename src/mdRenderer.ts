@@ -3,6 +3,7 @@ import MarkdownIt from "markdown-it";
 import { GenWasmPatch } from "./webpd";
 import { ListPdInputs, PdInput, InputType, InputTypeStr } from "./pdParser";
 
+// Render UI html
 const RenderPdInputHtml = (pdInput: PdInput, prefix: string): string => {
   if (pdInput.objectType === InputType.hsl) {
     return `
@@ -31,18 +32,21 @@ const RenderPdInputHtml = (pdInput: PdInput, prefix: string): string => {
   }
 };
 
+// Render Js argument string
 const msgArgStr = (pdInput: PdInput, isInit: boolean, initStr: any): string => {
   if (pdInput.objectType === InputType.hsl) {
     return isInit ? `[${initStr}]` : `[Number(e.target.value)]`;
-  } else if (pdInput.objectType === InputType.bng) {
-    return isInit ? `[]` : `["bang"]`;
-  } else if (pdInput.objectType === InputType.floatatom) {
-    return isInit ? `[]` : `[Number(e.target.value)]`;
-  } else {
-    throw new Error(`unknown input type: ${pdInput.objectType}`);
   }
+  if (pdInput.objectType === InputType.bng) {
+    return isInit ? `[]` : `["bang"]`;
+  }
+  if (pdInput.objectType === InputType.floatatom) {
+    return isInit ? `[]` : `[Number(e.target.value)]`;
+  }
+  throw new Error(`unknown input type: ${pdInput.objectType}`);
 };
 
+// Render Js send msg function
 const sendMsgFunctions = (
   pdInput: PdInput,
   prefix: string,
@@ -63,6 +67,7 @@ sendMsgToWebPd_${prefix}("n_0_${pdInput.nodeId}", "${portletId}", ${msgArgStr(
   return lines;
 };
 
+// Render UI html
 const RenderPdInputSendMsgFunction = (
   pdInput: PdInput,
   prefix: string
@@ -78,7 +83,8 @@ ${objectTypeStr}_${prefix}_${pdInput.nodeId}.oninput = (e) => {
   ${sendMsgFunctions(pdInput, prefix, false, null)}
 }
 `;
-  } else if (pdInput.objectType === InputType.bng) {
+  }
+  if (pdInput.objectType === InputType.bng) {
     return `
 const ${objectTypeStr}_${prefix}_${
       pdInput.nodeId
@@ -87,7 +93,8 @@ ${objectTypeStr}_${prefix}_${pdInput.nodeId}.onclick = () => {
   ${sendMsgFunctions(pdInput, prefix, false, null)}
 }
 `;
-  } else if (pdInput.objectType === InputType.floatatom) {
+  }
+  if (pdInput.objectType === InputType.floatatom) {
     return `
 const ${objectTypeStr}_${prefix}_${
       pdInput.nodeId
@@ -96,9 +103,8 @@ ${objectTypeStr}_${prefix}_${pdInput.nodeId}.onchange = (e) => {
   ${sendMsgFunctions(pdInput, prefix, false, null)}
 }
 `;
-  } else {
-    throw new Error(`unknown input type: ${pdInput.objectType}`);
   }
+  throw new Error(`unknown input type: ${pdInput.objectType}`);
 };
 
 const RenderPdInputUIInitFunction = (
@@ -122,14 +128,14 @@ const initHsl_${prefix}_${pdInput.nodeId} = () => {
 const initBng_${prefix}_${pdInput.nodeId} = () => {
 }
 `;
-  } else if (pdInput.objectType === InputType.floatatom) {
+  }
+  if (pdInput.objectType === InputType.floatatom) {
     return `
 const initFloatatom_${prefix}_${pdInput.nodeId} = () => {
 }
 `;
-  } else {
-    throw new Error(`unknown input type: ${pdInput.objectType}`);
   }
+  throw new Error(`unknown input type: ${pdInput.objectType}`);
 };
 
 const RenderPdInputUIInitCall = (pdInput: PdInput, prefix: string): string => {
@@ -142,18 +148,20 @@ initHsl_${prefix}_${pdInput.nodeId}()
     return `
 initBng_${prefix}_${pdInput.nodeId}()
 `;
-  } else if (pdInput.objectType === InputType.floatatom) {
+  }
+  if (pdInput.objectType === InputType.floatatom) {
     return `
 initFloatatom_${prefix}_${pdInput.nodeId}()
 `;
-  } else {
-    throw new Error(`unknown input type: ${pdInput.objectType}`);
   }
+  throw new Error(`unknown input type: ${pdInput.objectType}`);
 };
 
+// markdown + webpd render
 const customRenderer = (baseDir: string) => {
   const md = new MarkdownIt();
   const originalImgRender = md.renderer.rules.image!;
+  // override image render
   md.renderer.rules.image = (tokens, idx, options, env, self) => {
     const token = tokens[idx]!;
     const src = token.attrs![token.attrIndex("src")][1];
@@ -178,11 +186,13 @@ const customRenderer = (baseDir: string) => {
 <div id="${alt}">
   <div> ${fileName} patch demo</div>
   <button id="onoff_${prefix}"> loading... </button>
-  <div>
-    - volume:
-    <input id="volume_${prefix}" type="range" min="0" max="1" step="0.01" value="0.5"> </input>
+  <div id="inputs_${prefix}">
+    <div>
+      - volume:
+      <input id="volume_${prefix}" type="range" min="0" max="1" step="0.01" value="0.5"> </input>
+    </div>
+    ${pdInputs.map((pdInput) => RenderPdInputHtml(pdInput, prefix)).join("\n")}
   </div>
-  ${pdInputs.map((pdInput) => RenderPdInputHtml(pdInput, prefix)).join("\n")}
 </div>
 <script>
 let audioContext_${prefix} = null
@@ -208,6 +218,7 @@ const initApp_${prefix} = async () => {
   patch_${prefix} = await response.arrayBuffer()
   onoffButton_${prefix}.style.display = 'block'
   onoffButton_${prefix}.innerText = 'start patch'
+  inputs_${prefix}.style.display = 'none'
 }
 
 const initVolume_${prefix} = () => {
@@ -242,6 +253,7 @@ const startApp_${prefix} = async () => {
     .join("\n")}
   isPlaying_${prefix} = true
   onoffButton_${prefix}.innerText = 'stop patch'
+  inputs_${prefix}.style.display = 'block'
 }
 
 const stopApp_${prefix} = () => {
@@ -251,6 +263,7 @@ const stopApp_${prefix} = () => {
 
   onoffButton_${prefix}.innerText = 'start patch'
   isPlaying_${prefix} = false
+  inputs_${prefix}.style.display = 'none'
 }
 
 onoffButton_${prefix}.onclick = () => {
@@ -316,6 +329,7 @@ volume_${prefix}.oninput = (e) => {
   return md;
 };
 
+// from markdown, generate html
 export const RenderMd = async (
   markdownPath: string,
   cacheDir: string,
@@ -327,6 +341,7 @@ export const RenderMd = async (
   return md.render(markdown);
 };
 
+// from markdown, find puredata patches
 const forCountPdRenderer = (compileTasks: Array<string>) => {
   const md = new MarkdownIt();
   const originalImgRender = md.renderer.rules.image!;
@@ -344,6 +359,7 @@ const forCountPdRenderer = (compileTasks: Array<string>) => {
   return md;
 };
 
+// from markdown, generate wasm patches
 const genWasmPatches = async (
   markdownPath: string,
   baseDir: string,
