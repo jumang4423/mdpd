@@ -20,20 +20,62 @@ const RenderPdInputHtml = (pdInput: PdInput, prefix: string): string => {
   <button id="bng_${prefix}_${pdInput.nodeId}"> bang </button>
 </div>
 `;
-  } else if (pdInput.objectType === InputType.floatatom) {
+  } 
+  if (pdInput.objectType === InputType.floatatom) {
     return `
 <div>
   - ${pdInput.name}:
   <input id="floatatom_${prefix}_${pdInput.nodeId}" type="number" value=0> </input>
 </div>
 `;
-  } else {
-    throw new Error(`unknown input type: ${pdInput.objectType}`);
+  } 
+  if (pdInput.objectType === InputType.tgl) {
+    return `
+<div>
+  - ${pdInput.name}:
+  <input id="tgl_${prefix}_${pdInput.nodeId}" type="checkbox"> </input>
+</div>
+`;
   }
+  if (pdInput.objectType === InputType.nbx) {
+    return `
+<div>
+  - ${pdInput.name}:
+  <input id="nbx_${prefix}_${pdInput.nodeId}" type="number" value=0> </input>
+</div>
+`;
+  }
+  if (pdInput.objectType === InputType.vsl) {
+    return `
+<div>
+  - ${pdInput.name}:
+  <input id="vsl_${prefix}_${pdInput.nodeId}" type="range" min="${pdInput.min}" max="${pdInput.max}" step="1" value="${pdInput.min}"> </input>
+</div>
+`;
+  }
+  if (pdInput.objectType === InputType.vradio) {
+    return `
+<div>
+  - ${pdInput.name}:
+  ${
+    pdInput.numCells === undefined
+      ? ""
+      : [...Array(pdInput.numCells)].map((_, i) => {
+          return `
+  <input type="radio" id="vradio_${prefix}_${pdInput.nodeId}_${i}" name="vradio_${prefix}_${pdInput.nodeId}" value="${i}">
+  <label for="vradio_${prefix}_${pdInput.nodeId}_${i}">${i}</label>
+  `;
+        }
+      )
+  }
+</div>
+`;}
+
+    throw new Error(`unknown input type: ${pdInput.objectType}`);
 };
 
 // Render Js argument string
-const msgArgStr = (pdInput: PdInput, isInit: boolean, initStr: any): string => {
+const msgArgStr = (pdInput: PdInput, isInit: boolean, initStr: any, prefix: string): string => {
   if (pdInput.objectType === InputType.hsl) {
     return isInit ? `[${initStr}]` : `[Number(e.target.value)]`;
   }
@@ -43,6 +85,16 @@ const msgArgStr = (pdInput: PdInput, isInit: boolean, initStr: any): string => {
   if (pdInput.objectType === InputType.floatatom) {
     return isInit ? `[]` : `[Number(e.target.value)]`;
   }
+  if (pdInput.objectType === InputType.tgl) {
+    return isInit ? `[]` : `[tgl_${prefix}_${pdInput.nodeId}.checked ? 1 : 0]`;
+  }
+  if (pdInput.objectType === InputType.nbx) {
+    return isInit ? `[]` : `[Number(e.target.value)]`;
+  }
+  if (pdInput.objectType === InputType.vsl) {
+    return isInit ? `[${initStr}]` : `[Number(e.target.value)]`;
+  }
+
   throw new Error(`unknown input type: ${pdInput.objectType}`);
 };
 
@@ -60,7 +112,8 @@ const sendMsgFunctions = (
 sendMsgToWebPd_${prefix}("n_0_${pdInput.nodeId}", "${portletId}", ${msgArgStr(
       pdInput,
       isInit,
-      initStr
+      initStr,
+      prefix
     )});
 `;
   }
@@ -104,6 +157,37 @@ ${objectTypeStr}_${prefix}_${pdInput.nodeId}.onchange = (e) => {
 }
 `;
   }
+  if (pdInput.objectType === InputType.tgl) {
+    return `
+const ${objectTypeStr}_${prefix}_${
+      pdInput.nodeId
+    } = document.querySelector("#${objectTypeStr}_${prefix}_${pdInput.nodeId}")
+${objectTypeStr}_${prefix}_${pdInput.nodeId}.onclick = () => {
+  ${sendMsgFunctions(pdInput, prefix, false, null)}
+}
+`;
+  }
+  if (pdInput.objectType === InputType.nbx) {
+    return `
+const ${objectTypeStr}_${prefix}_${
+      pdInput.nodeId
+    } = document.querySelector("#${objectTypeStr}_${prefix}_${pdInput.nodeId}") 
+${objectTypeStr}_${prefix}_${pdInput.nodeId}.onchange = (e) => {
+  ${sendMsgFunctions(pdInput, prefix, false, null)}
+}
+`;
+  }
+  if (pdInput.objectType === InputType.vsl) {
+    return `
+const ${objectTypeStr}_${prefix}_${
+      pdInput.nodeId
+    } = document.querySelector("#${objectTypeStr}_${prefix}_${pdInput.nodeId}")
+${objectTypeStr}_${prefix}_${pdInput.nodeId}.oninput = (e) => {
+  ${sendMsgFunctions(pdInput, prefix, false, null)}
+}
+`;
+  }
+
   throw new Error(`unknown input type: ${pdInput.objectType}`);
 };
 
@@ -135,6 +219,31 @@ const initFloatatom_${prefix}_${pdInput.nodeId} = () => {
 }
 `;
   }
+  if (pdInput.objectType === InputType.tgl) {
+    return `
+const initTgl_${prefix}_${pdInput.nodeId} = () => {
+}
+`;
+  }
+  if (pdInput.objectType === InputType.nbx) {
+    return `
+const initNbx_${prefix}_${pdInput.nodeId} = () => {
+}
+`;
+  }
+  if (pdInput.objectType === InputType.vsl) {
+    //@ts-ignore
+    const mid = (pdInput.max + pdInput.min) / 2;
+    return `
+const initVsl_${prefix}_${pdInput.nodeId} = () => {
+  vsl_${prefix}_${pdInput.nodeId}.value = ${mid}
+  setTimeout(() => {
+    ${sendMsgFunctions(pdInput, prefix, true, mid)}
+  }, 100)
+}
+`;
+  }
+
   throw new Error(`unknown input type: ${pdInput.objectType}`);
 };
 
@@ -154,6 +263,22 @@ initBng_${prefix}_${pdInput.nodeId}()
 initFloatatom_${prefix}_${pdInput.nodeId}()
 `;
   }
+  if (pdInput.objectType === InputType.tgl) {
+    return `
+initTgl_${prefix}_${pdInput.nodeId}()
+`;
+  }
+  if (pdInput.objectType === InputType.nbx) {
+    return `
+initNbx_${prefix}_${pdInput.nodeId}()
+`;
+  }
+  if (pdInput.objectType === InputType.vsl) {
+    return `
+initVsl_${prefix}_${pdInput.nodeId}()
+`;
+  }
+
   throw new Error(`unknown input type: ${pdInput.objectType}`);
 };
 
