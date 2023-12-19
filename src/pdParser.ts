@@ -5,12 +5,20 @@ export enum InputType {
   hsl,
   bng,
   floatatom,
+  tgl,
+  nbx,
+  vsl,
+  vradio,
 }
 
 export const InputTypeStr = {
   [InputType.hsl]: "hsl",
   [InputType.bng]: "bng",
   [InputType.floatatom]: "floatatom",
+  [InputType.tgl]: "tgl",
+  [InputType.nbx]: "nbx",
+  [InputType.vsl]: "vsl",
+  [InputType.vradio]: "vradio",
 };
 
 export interface PdInput {
@@ -21,6 +29,7 @@ export interface PdInput {
   name: string;
   min?: number;
   max?: number;
+  numCells?: number;
 }
 const PdInputT = "PdInput";
 
@@ -63,6 +72,34 @@ class PdParser {
       this.tokens[this.cur_line][1] === "floatatom";
     if (isFloatatom) {
       return Some("floatatom");
+    }
+    const isTgl =
+      this.tokens[this.cur_line][0] === "#X" &&
+      this.tokens[this.cur_line][1] === "obj" &&
+      this.tokens[this.cur_line][4] === "tgl";
+    if (isTgl) {
+      return Some("tgl");
+    }
+    const isNbx =
+      this.tokens[this.cur_line][0] === "#X" &&
+      this.tokens[this.cur_line][1] === "obj" &&
+      this.tokens[this.cur_line][4] === "nbx";
+    if (isNbx) {
+      return Some("nbx");
+    }
+    const isVsl =
+      this.tokens[this.cur_line][0] === "#X" &&
+      this.tokens[this.cur_line][1] === "obj" &&
+      this.tokens[this.cur_line][4] === "vsl";
+    if (isVsl) {
+      return Some("vsl");
+    }
+    const isVradio =
+      this.tokens[this.cur_line][0] === "#X" &&
+      this.tokens[this.cur_line][1] === "obj" &&
+      this.tokens[this.cur_line][4] === "vradio";
+    if (isVradio) {
+      return Some("vradio");
     }
     return None;
   }
@@ -145,6 +182,18 @@ class PdParser {
     if (inputType === "floatatom") {
       return this.parseFloatatomInput();
     }
+    if (inputType === "tgl") {
+      return this.parseTglInput();
+    }
+    if (inputType === "nbx") {
+      return this.parseNbxInput();
+    }
+    if (inputType === "vsl") {
+      return this.parseVslInput();
+    }
+    if (inputType === "vradio") {
+      return this.parseVradioInput();
+    }
 
     throw new Error("Input type not found");
   }
@@ -185,6 +234,56 @@ class PdParser {
       objectType: InputType.floatatom,
       activePortlets: [],
       name,
+    };
+  }
+
+  private parseTglInput(): PdInput {
+    const name = this.tokens[this.cur_line][9];
+    return {
+      t: PdInputT,
+      nodeId: this.latestNodeId,
+      objectType: InputType.tgl,
+      activePortlets: [],
+      name,
+    };
+  }
+
+  private parseNbxInput(): PdInput {
+    const name = this.tokens[this.cur_line][13];
+    return {
+      t: PdInputT,
+      nodeId: this.latestNodeId,
+      objectType: InputType.nbx,
+      activePortlets: [],
+      name,
+    };
+  }
+
+  private parseVslInput(): PdInput {
+    const name = this.tokens[this.cur_line][13];
+    const min = Number(this.tokens[this.cur_line][7]);
+    const max = Number(this.tokens[this.cur_line][8]);
+    return {
+      t: PdInputT,
+      nodeId: this.latestNodeId,
+      objectType: InputType.vsl,
+      activePortlets: [],
+      name,
+      min,
+      max,
+    };
+  }
+
+  private parseVradioInput(): PdInput {
+    const name = this.tokens[this.cur_line][13];
+    const numCells = Number(this.tokens[this.cur_line][8]);
+    return {
+      t: PdInputT,
+      nodeId: this.latestNodeId,
+      objectType: InputType.vradio,
+      activePortlets: [],
+      name,
+      numCells,
     };
   }
 
