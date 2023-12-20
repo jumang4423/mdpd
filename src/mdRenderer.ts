@@ -20,7 +20,7 @@ const RenderPdInputHtml = (pdInput: PdInput, prefix: string): string => {
   <button id="bng_${prefix}_${pdInput.nodeId}"> bang </button>
 </div>
 `;
-  } 
+  }
   if (pdInput.objectType === InputType.floatatom) {
     return `
 <div>
@@ -28,7 +28,7 @@ const RenderPdInputHtml = (pdInput: PdInput, prefix: string): string => {
   <input id="floatatom_${prefix}_${pdInput.nodeId}" type="number" value=0> </input>
 </div>
 `;
-  } 
+  }
   if (pdInput.objectType === InputType.tgl) {
     return `
 <div>
@@ -65,17 +65,30 @@ const RenderPdInputHtml = (pdInput: PdInput, prefix: string): string => {
   <input type="radio" id="vradio_${prefix}_${pdInput.nodeId}_${i}" name="vradio_${prefix}_${pdInput.nodeId}" value="${i}">
   <label for="vradio_${prefix}_${pdInput.nodeId}_${i}">${i}</label>
   `;
-        }
-      )
+        })
   }
 </div>
-`;}
+`;
+  }
+  if (pdInput.objectType === InputType.msg) {
+    return `
+<div>
+  - ${pdInput.name}:
+  <button id="msg_${prefix}_${pdInput.nodeId}"> send </button>
+</div>
+`;
+  }
 
-    throw new Error(`unknown input type: ${pdInput.objectType}`);
+  throw new Error(`unknown input type: ${pdInput.objectType}`);
 };
 
 // Render Js argument string
-const msgArgStr = (pdInput: PdInput, isInit: boolean, initStr: any, prefix: string): string => {
+const msgArgStr = (
+  pdInput: PdInput,
+  isInit: boolean,
+  initStr: any,
+  prefix: string
+): string => {
   if (pdInput.objectType === InputType.hsl) {
     return isInit ? `[${initStr}]` : `[Number(e.target.value)]`;
   }
@@ -93,6 +106,12 @@ const msgArgStr = (pdInput: PdInput, isInit: boolean, initStr: any, prefix: stri
   }
   if (pdInput.objectType === InputType.vsl) {
     return isInit ? `[${initStr}]` : `[Number(e.target.value)]`;
+  }
+  if (pdInput.objectType === InputType.vradio) {
+    return isInit ? `[${initStr}]` : `[Number(e.target.value)]`;
+  }
+  if (pdInput.objectType === InputType.msg) {
+    return isInit ? `[]` : `[1]`;
   }
 
   throw new Error(`unknown input type: ${pdInput.objectType}`);
@@ -187,6 +206,26 @@ ${objectTypeStr}_${prefix}_${pdInput.nodeId}.oninput = (e) => {
 }
 `;
   }
+  if (pdInput.objectType === InputType.vradio) {
+    return `
+const ${objectTypeStr}_${prefix}_${
+      pdInput.nodeId
+    } = document.querySelector("#${objectTypeStr}_${prefix}_${pdInput.nodeId}")
+${objectTypeStr}_${prefix}_${pdInput.nodeId}.onchange = (e) => {
+  ${sendMsgFunctions(pdInput, prefix, false, null)}
+}
+`;
+  }
+  if (pdInput.objectType === InputType.msg) {
+    return `
+const ${objectTypeStr}_${prefix}_${
+      pdInput.nodeId
+    } = document.querySelector("#${objectTypeStr}_${prefix}_${pdInput.nodeId}")
+${objectTypeStr}_${prefix}_${pdInput.nodeId}.onchange = (e) => {
+  ${sendMsgFunctions(pdInput, prefix, false, null)}
+}
+`;
+  }
 
   throw new Error(`unknown input type: ${pdInput.objectType}`);
 };
@@ -243,6 +282,18 @@ const initVsl_${prefix}_${pdInput.nodeId} = () => {
 }
 `;
   }
+  if (pdInput.objectType === InputType.vradio) {
+    return `
+const initVradio_${prefix}_${pdInput.nodeId} = () => {
+}
+`;
+  }
+  if (pdInput.objectType === InputType.msg) {
+    return `
+const initMsg_${prefix}_${pdInput.nodeId} = () => {
+}
+`;
+  }
 
   throw new Error(`unknown input type: ${pdInput.objectType}`);
 };
@@ -276,6 +327,16 @@ initNbx_${prefix}_${pdInput.nodeId}()
   if (pdInput.objectType === InputType.vsl) {
     return `
 initVsl_${prefix}_${pdInput.nodeId}()
+`;
+  }
+  if (pdInput.objectType === InputType.vradio) {
+    return `
+initVradio_${prefix}_${pdInput.nodeId}()
+`;
+  }
+  if (pdInput.objectType === InputType.msg) {
+    return `
+initMsg_${prefix}_${pdInput.nodeId}()
 `;
   }
 

@@ -29,3 +29,5 @@ yarn dev <md file>
 - tgl
 - nbx
 - vsl
+- vradio
+- msg

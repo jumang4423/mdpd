@@ -9,6 +9,7 @@ export enum InputType {
   nbx,
   vsl,
   vradio,
+  msg,
 }
 
 export const InputTypeStr = {
@@ -19,6 +20,7 @@ export const InputTypeStr = {
   [InputType.nbx]: "nbx",
   [InputType.vsl]: "vsl",
   [InputType.vradio]: "vradio",
+  [InputType.msg]: "msg",
 };
 
 export interface PdInput {
@@ -101,6 +103,13 @@ class PdParser {
     if (isVradio) {
       return Some("vradio");
     }
+    const isMsg =
+      this.tokens[this.cur_line][0] === "#X" &&
+      this.tokens[this.cur_line][1] === "msg";
+    if (isMsg) {
+      return Some("msg");
+    }
+
     return None;
   }
 
@@ -193,6 +202,9 @@ class PdParser {
     }
     if (inputType === "vradio") {
       return this.parseVradioInput();
+    }
+    if (inputType === "msg") {
+      return this.parseMsgInput();
     }
 
     throw new Error("Input type not found");
@@ -298,6 +310,18 @@ class PdParser {
       inputPortletId,
       outputNodeId,
       outputPortletId,
+    };
+  }
+
+  private parseMsgInput(): PdInput {
+    // concat str from index 4 to end
+    const name = this.tokens[this.cur_line].slice(4).join(" ");
+    return {
+      t: PdInputT,
+      nodeId: this.latestNodeId,
+      objectType: InputType.msg,
+      activePortlets: [],
+      name,
     };
   }
 }
