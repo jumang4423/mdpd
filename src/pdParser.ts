@@ -9,7 +9,10 @@ export enum InputType {
   nbx,
   vsl,
   vradio,
+  hradio,
   msg,
+  listbox,
+  symbolatom
 }
 
 export const InputTypeStr = {
@@ -20,7 +23,10 @@ export const InputTypeStr = {
   [InputType.nbx]: "nbx",
   [InputType.vsl]: "vsl",
   [InputType.vradio]: "vradio",
+  [InputType.hradio]: "hradio",
   [InputType.msg]: "msg",
+  [InputType.listbox]: "listbox",
+  [InputType.symbolatom]: "symbolatom"
 };
 
 export interface PdInput {
@@ -103,11 +109,30 @@ class PdParser {
     if (isVradio) {
       return Some("vradio");
     }
+    const isHradio =
+      this.tokens[this.cur_line][0] === "#X" &&
+      this.tokens[this.cur_line][1] === "obj" &&
+      this.tokens[this.cur_line][4] === "hradio";
+    if (isHradio) {
+      return Some("hradio");
+    }
     const isMsg =
       this.tokens[this.cur_line][0] === "#X" &&
       this.tokens[this.cur_line][1] === "msg";
     if (isMsg) {
       return Some("msg");
+    }
+    const isListbox =
+      this.tokens[this.cur_line][0] === "#X" &&
+      this.tokens[this.cur_line][1] === "listbox"
+    if (isListbox) {
+      return Some("listbox");
+    }
+    const isSymbolatom =
+      this.tokens[this.cur_line][0] === "#X" &&
+      this.tokens[this.cur_line][1] === "symbolatom"
+    if (isSymbolatom) {
+      return Some("symbolatom");
     }
 
     return None;
@@ -203,8 +228,17 @@ class PdParser {
     if (inputType === "vradio") {
       return this.parseVradioInput();
     }
+    if (inputType === "hradio") {
+      return this.parseHradioInput();
+    }
     if (inputType === "msg") {
       return this.parseMsgInput();
+    }
+    if (inputType === "listbox") {
+      return this.parseListboxInput();
+    }
+    if (inputType === "symbolatom") {
+      return this.parseSymbolatomInput();
     }
 
     throw new Error("Input type not found");
@@ -287,12 +321,25 @@ class PdParser {
   }
 
   private parseVradioInput(): PdInput {
-    const name = this.tokens[this.cur_line][13];
+    const name = this.tokens[this.cur_line][11];
     const numCells = Number(this.tokens[this.cur_line][8]);
     return {
       t: PdInputT,
       nodeId: this.latestNodeId,
       objectType: InputType.vradio,
+      activePortlets: [],
+      name,
+      numCells,
+    };
+  }
+
+  private parseHradioInput(): PdInput {
+    const name = this.tokens[this.cur_line][11];
+    const numCells = Number(this.tokens[this.cur_line][8]);
+    return {
+      t: PdInputT,
+      nodeId: this.latestNodeId,
+      objectType: InputType.hradio,
       activePortlets: [],
       name,
       numCells,
@@ -314,12 +361,31 @@ class PdParser {
   }
 
   private parseMsgInput(): PdInput {
-    // concat str from index 4 to end
     const name = this.tokens[this.cur_line].slice(4).join(" ");
     return {
       t: PdInputT,
       nodeId: this.latestNodeId,
       objectType: InputType.msg,
+      activePortlets: [],
+      name,
+    };
+  }
+  private parseListboxInput(): PdInput {
+    const name = this.tokens[this.cur_line][8];
+    return {
+      t: PdInputT,
+      nodeId: this.latestNodeId,
+      objectType: InputType.listbox,
+      activePortlets: [],
+      name,
+    };
+  }
+  private parseSymbolatomInput(): PdInput {
+    const name = this.tokens[this.cur_line][8];
+    return {
+      t: PdInputT,
+      nodeId: this.latestNodeId,
+      objectType: InputType.symbolatom,
       activePortlets: [],
       name,
     };

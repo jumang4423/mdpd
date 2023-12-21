@@ -1,0 +1,4 @@
+#N canvas 167 543 450 300 12;
+#X listbox 115 84 20 0 0 0 aaaaaaaa - - 0;
+#X obj 115 151 print;
+#X connect 0 0 1 0;

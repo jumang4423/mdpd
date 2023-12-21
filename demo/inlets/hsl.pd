@@ -1,0 +1,4 @@
+#N canvas 440 478 450 300 12;
+#X obj 41 70 hsl 162 19 0 127 0 0 empty empty slide_me -2 -10 0 12 #fcfcfc #000000 #000000 0 1;
+#X obj 104 135 print;
+#X connect 0 0 1 0;

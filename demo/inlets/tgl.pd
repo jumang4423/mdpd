@@ -1,0 +1,4 @@
+#N canvas 498 381 450 300 12;
+#X obj 87 47 tgl 19 0 empty empty click_me 0 -10 0 12 #fcfcfc #000000 #000000 0 1;
+#X obj 124 134 print;
+#X connect 0 0 1 0;

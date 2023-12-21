@@ -1,0 +1,6 @@
+#N canvas 411 449 450 300 12;
+#X obj 90 48 bng 19 250 50 0 empty empty empty 0 -10 0 12 #fcfcfc #000000 #000000;
+#X msg 108 102 bang!!!!;
+#X obj 106 175 print;
+#X connect 0 0 1 0;
+#X connect 1 0 2 0;

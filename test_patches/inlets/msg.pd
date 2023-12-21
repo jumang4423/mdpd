@@ -1,4 +1,0 @@
-#N canvas 408 377 574 415 12;
-#X msg 140 69 hello;
-#X obj 144 129 print;
-#X connect 0 0 1 0;

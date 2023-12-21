@@ -1,0 +1,4 @@
+#N canvas 730 52 450 300 12;
+#X obj 79 78 vradio 19 1 0 8 empty empty vradio 0 -10 0 12 #fcfcfc #000000 #000000 0;
+#X obj 220 143 print;
+#X connect 0 0 1 0;

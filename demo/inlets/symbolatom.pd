@@ -1,0 +1,4 @@
+#N canvas 427 255 450 300 12;
+#X symbolatom 85 71 10 0 0 0 symbol - - 0;
+#X obj 85 94 print;
+#X connect 0 0 1 0;

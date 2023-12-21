@@ -62,8 +62,23 @@ const RenderPdInputHtml = (pdInput: PdInput, prefix: string): string => {
       ? ""
       : [...Array(pdInput.numCells)].map((_, i) => {
           return `
-  <input type="radio" id="vradio_${prefix}_${pdInput.nodeId}_${i}" name="vradio_${prefix}_${pdInput.nodeId}" value="${i}">
-  <label for="vradio_${prefix}_${pdInput.nodeId}_${i}">${i}</label>
+  <input type="radio" id="vradio_${prefix}_${pdInput.nodeId}_${i}" name="vradio_${prefix}_${pdInput.nodeId}" value="${i}"></input>
+  `;
+        })
+  }
+</div>
+`;
+  }
+  if (pdInput.objectType === InputType.hradio) {
+    return `
+<div>
+  - ${pdInput.name}:
+  ${
+    pdInput.numCells === undefined
+      ? ""
+      : [...Array(pdInput.numCells)].map((_, i) => {
+          return `
+  <input type="radio" id="hradio_${prefix}_${pdInput.nodeId}_${i}" name="hradio_${prefix}_${pdInput.nodeId}" value="${i}"></input>
   `;
         })
   }
@@ -75,6 +90,22 @@ const RenderPdInputHtml = (pdInput: PdInput, prefix: string): string => {
 <div>
   - ${pdInput.name}:
   <button id="msg_${prefix}_${pdInput.nodeId}"> send </button>
+</div>
+`;
+  }
+  if (pdInput.objectType === InputType.listbox) {
+    return `
+<div>
+  - ${pdInput.name}:
+  <input id="listbox_${prefix}_${pdInput.nodeId}"></input>
+</div>
+`;
+  }
+  if (pdInput.objectType === InputType.symbolatom) {
+    return `
+<div>
+  - ${pdInput.name}:
+  <input id="symbolatom_${prefix}_${pdInput.nodeId}"></input>
 </div>
 `;
   }
@@ -108,10 +139,19 @@ const msgArgStr = (
     return isInit ? `[${initStr}]` : `[Number(e.target.value)]`;
   }
   if (pdInput.objectType === InputType.vradio) {
-    return isInit ? `[${initStr}]` : `[Number(e.target.value)]`;
+    return isInit ? `[]` : `[Number(e.target.value)]`;
+  }
+  if (pdInput.objectType === InputType.hradio) {
+    return isInit ? `[]` : `[Number(e.target.value)]`;
   }
   if (pdInput.objectType === InputType.msg) {
-    return isInit ? `[]` : `[1]`;
+    return isInit ? `[]` : `["bang"]`;
+  }
+  if (pdInput.objectType === InputType.listbox) {
+    return isInit ? `[]` : `e.target.value.split(" ")`;
+  }
+  if (pdInput.objectType === InputType.symbolatom) {
+    return isInit ? `[]` : `[e.target.value]`;
   }
 
   throw new Error(`unknown input type: ${pdInput.objectType}`);
@@ -208,6 +248,54 @@ ${objectTypeStr}_${prefix}_${pdInput.nodeId}.oninput = (e) => {
   }
   if (pdInput.objectType === InputType.vradio) {
     return `
+${[...Array(pdInput.numCells)].map((_, i) => {
+      return `
+const ${objectTypeStr}_${prefix}_${pdInput.nodeId}_${i} = document.querySelector("#${objectTypeStr}_${prefix}_${pdInput.nodeId}_${i}")
+${objectTypeStr}_${prefix}_${pdInput.nodeId}_${i}.onclick = () => {
+  const e = {
+    target: {
+      value: ${i}
+    }
+  }
+  ${sendMsgFunctions(pdInput, prefix, false, i)}
+}
+`;
+    }
+  ).join("\n")}
+`;
+  }
+
+  if (pdInput.objectType === InputType.hradio) {
+    return `
+${[...Array(pdInput.numCells)].map((_, i) => {
+      return `
+const ${objectTypeStr}_${prefix}_${pdInput.nodeId}_${i} = document.querySelector("#${objectTypeStr}_${prefix}_${pdInput.nodeId}_${i}")
+${objectTypeStr}_${prefix}_${pdInput.nodeId}_${i}.onclick = () => {
+  const e = {
+    target: {
+      value: ${i}
+    }
+  }
+  ${sendMsgFunctions(pdInput, prefix, false, i)}
+}
+`;
+    }
+  ).join("\n")}
+`;
+  }
+
+  if (pdInput.objectType === InputType.msg) {
+    return `
+const ${objectTypeStr}_${prefix}_${
+      pdInput.nodeId
+    } = document.querySelector("#${objectTypeStr}_${prefix}_${pdInput.nodeId}")
+${objectTypeStr}_${prefix}_${pdInput.nodeId}.onclick = () => {
+  ${sendMsgFunctions(pdInput, prefix, false, null)}
+}
+`;
+  }
+  if (pdInput.objectType === InputType.listbox) {
+    return `
 const ${objectTypeStr}_${prefix}_${
       pdInput.nodeId
     } = document.querySelector("#${objectTypeStr}_${prefix}_${pdInput.nodeId}")
@@ -216,7 +304,7 @@ ${objectTypeStr}_${prefix}_${pdInput.nodeId}.onchange = (e) => {
 }
 `;
   }
-  if (pdInput.objectType === InputType.msg) {
+  if (pdInput.objectType === InputType.symbolatom) {
     return `
 const ${objectTypeStr}_${prefix}_${
       pdInput.nodeId
@@ -288,9 +376,27 @@ const initVradio_${prefix}_${pdInput.nodeId} = () => {
 }
 `;
   }
+  if (pdInput.objectType === InputType.hradio) {
+    return `
+const initHradio_${prefix}_${pdInput.nodeId} = () => {
+}
+`;
+  }
   if (pdInput.objectType === InputType.msg) {
     return `
 const initMsg_${prefix}_${pdInput.nodeId} = () => {
+}
+`;
+  }
+  if (pdInput.objectType === InputType.listbox) {
+    return `
+const initListbox_${prefix}_${pdInput.nodeId} = () => {
+}
+`;
+  }
+  if (pdInput.objectType === InputType.symbolatom) {
+    return `
+const initSymbolatom_${prefix}_${pdInput.nodeId} = () => {
 }
 `;
   }
@@ -334,9 +440,24 @@ initVsl_${prefix}_${pdInput.nodeId}()
 initVradio_${prefix}_${pdInput.nodeId}()
 `;
   }
+  if (pdInput.objectType === InputType.hradio) {
+    return `
+initHradio_${prefix}_${pdInput.nodeId}()
+`;
+  }
   if (pdInput.objectType === InputType.msg) {
     return `
 initMsg_${prefix}_${pdInput.nodeId}()
+`;
+  }
+  if (pdInput.objectType === InputType.listbox) {
+    return `
+initListbox_${prefix}_${pdInput.nodeId}()
+`;
+  }
+  if (pdInput.objectType === InputType.symbolatom) {
+    return `
+initSymbolatom_${prefix}_${pdInput.nodeId}()
 `;
   }
 
