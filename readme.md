@@ -1,21 +1,7 @@
 # mdpd
 
 ```bash
+npm -g install webpd
 yarn
-yarn dev <md file>
+yarn dev <md filepath>
 ```
-
-# implemented inlets
-
-- listbox
-- symbolatom
-- vsl
-- hsl
-- bng
-- floatatom
-- tgl
-- nbx
-- vsl
-- vradio
-- hradio
-- msg

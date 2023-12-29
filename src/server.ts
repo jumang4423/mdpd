@@ -1,24 +1,29 @@
 import express from "express";
-import { RenderMd } from "./mdRenderer";
+import { RenderMd, getMarkdownFiles } from "./mdRenderer";
 import fs from "fs";
 
 export const Listen = async (
-  htmlFilePath: string,
+  mainMdPath: string,
   port: number,
   baseDir: string,
   cacheDir: string
 ) => {
   const app = express();
-  let html: string = await RenderMd(htmlFilePath, cacheDir, baseDir);
+  let html: string = await RenderMd(mainMdPath, cacheDir, baseDir);
+  let mdFiles = getMarkdownFiles(baseDir, baseDir);
 
   app.use(express.static(cacheDir));
   app.use(express.static(baseDir));
   app.use(express.static("./public"));
 
-  fs.watch(htmlFilePath, async () => {
-    console.log("File changed, rerendering");
-    html = await RenderMd(htmlFilePath, cacheDir, baseDir);
-  });
+  // watch all md files in the base directory
+  for (const mdFile of mdFiles) {
+    const mdFilePath = `${baseDir}/${mdFile}`;
+    fs.watch(mdFilePath, async () =>{
+      console.log("=== File changed, reloading...");
+      html = await RenderMd(mdFilePath, cacheDir, baseDir);
+    });
+  }
 
   app.get("/", async (_, res) => {
     res.send(html);

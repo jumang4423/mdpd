@@ -18,6 +18,7 @@ export const GenWasmPatch = (
   try {
     const filename = pdFilePath.split("/").pop()!;
     const wasmPath = `${cacheDir}/${filename.replace(".pd", ".wasm")}`;
+    console.log(`Generating wasm file: ${wasmPath}`);
     util.promisify(exec)(`webpd -i ${pdFilePath} -o ${wasmPath} -f wasm`);
     return Ok(wasmPath);
   } catch (e) {

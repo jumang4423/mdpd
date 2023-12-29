@@ -1,17 +1,19 @@
-import { Ok, Err, Result } from "ts-results";
 import { GetMdFilePathFromArgs } from "./src/cli";
 import { IsWebPDAvailable } from "./src/webpd";
 import { Listen } from "./src/server";
 
 const PORT = 3000;
-let BASE_DIR: string | undefined = undefined;
 const CACHE_DIR = "./cache";
+let BASE_DIR: string | undefined = undefined;
 
 const main = async () => {
+  // load md file path from args
   const mdFilePath = GetMdFilePathFromArgs().unwrap();
   console.log(`Detected: ${mdFilePath}`);
   BASE_DIR = mdFilePath.split("/").slice(0, -1).join("/");
+  console.log(`Base directory: ${BASE_DIR}`);
 
+  // check if webpd is available on the system
   if (!(await IsWebPDAvailable())) {
     console.error("WebPD is not available");
     process.exit(1);

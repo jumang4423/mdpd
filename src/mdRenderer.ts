@@ -1,4 +1,5 @@
 import fs from "fs";
+import path from "path";
 import MarkdownIt from "markdown-it";
 import { GenWasmPatch } from "./webpd";
 import { ListPdInputs, PdInput, InputType, InputTypeStr } from "./pdParser";
@@ -467,7 +468,16 @@ initSymbolatom_${prefix}_${pdInput.nodeId}()
 // markdown + webpd render
 const customRenderer = (baseDir: string) => {
   const md = new MarkdownIt();
-  const originalImgRender = md.renderer.rules.image!;
+  // override link render
+  md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
+    const token = tokens[idx]!;
+    const href = token.attrs![token.attrIndex("href")][1];
+    const href_pd = href.split("/").pop()!
+    const href_name = href_pd.split(".")[0]
+    const href_html = href_name + ".html";
+    return `<a href="${href_html}">`;
+  }
+
   // override image render
   md.renderer.rules.image = (tokens, idx, options, env, self) => {
     const token = tokens[idx]!;
@@ -609,11 +619,11 @@ volume_${prefix}.oninput = (e) => {
 </script>
 `;
     } else {
-      return originalImgRender(tokens, idx, options, env, self);
+      return `<img src="${src}" alt="${alt}"></img>`;
     }
   };
 
-  // add link
+  // add webpd runtime
   const originalRender = md.render;
   md.render = (...args) => {
     const linkElement = `<link href="https://pvinis.github.io/iosevka-webfont/3.4.1/iosevka.css" rel="stylesheet" />`;
@@ -636,16 +646,55 @@ volume_${prefix}.oninput = (e) => {
   return md;
 };
 
+export function getMarkdownFiles(dir: string, baseDir: string, fileList: string[] = []) {
+  // Read the directory
+  const files = fs.readdirSync(dir);
+
+  // Iterate over each file/directory in the current directory
+  files.forEach(file => {
+    const filePath = path.join(dir, file);
+    const fileStat = fs.statSync(filePath);
+
+    // If the current path is a directory, recurse into it
+    if (fileStat.isDirectory()) {
+      getMarkdownFiles(filePath, baseDir, fileList);
+    } else {
+      // If it's a file and ends with '.md', add it to the list
+      if (file.endsWith('.md')) {
+        fileList.push(path.relative(baseDir, filePath));
+      }
+    }
+  });
+
+  return fileList;
+}
+
 // from markdown, generate html
 export const RenderMd = async (
   markdownPath: string,
   cacheDir: string,
   baseDir: string
 ): Promise<string> => {
-  await genWasmPatches(markdownPath, baseDir, cacheDir);
-  const markdown = fs.readFileSync(markdownPath, "utf8");
-  const md = customRenderer(baseDir);
-  return md.render(markdown);
+  // read all markdown files recursively
+
+  const mdFiles = getMarkdownFiles(baseDir, baseDir);
+  console.log(`found ${mdFiles.length} markdown files`);
+  for (const mdFile of mdFiles) {
+    console.log(`rendering ${mdFile}`);
+    await genWasmPatches(baseDir + "/" + mdFile, baseDir, cacheDir);
+    const markdown = fs.readFileSync(baseDir + "/" + mdFile, "utf8");
+    const md = customRenderer(baseDir);
+    // save to tmp file
+    const html = md.render(markdown);
+    const htmlPath = cacheDir + "/" + mdFile.replace(".md", ".html");
+    fs.mkdirSync(path.dirname(htmlPath), { recursive: true });
+    fs.writeFileSync(htmlPath, html);
+  }
+
+  // open main html then return html str
+  const mainHtmlPath = cacheDir + "/" + markdownPath.split("/").pop()!.replace(".md", ".html");
+  return fs.readFileSync(mainHtmlPath, "utf8");
+
 };
 
 // from markdown, find puredata patches
