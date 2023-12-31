@@ -167,7 +167,6 @@ class PdParser {
       }
       this.cur_line++;
     }
-
     const inletsWithConnections = inlets.map((inlet) => {
       const connections = connects.filter(
         (connect) => connect.inputNodeId === inlet.nodeId
@@ -240,7 +239,6 @@ class PdParser {
     if (inputType === "symbolatom") {
       return this.parseSymbolatomInput();
     }
-
     throw new Error("Input type not found");
   }
 
@@ -397,6 +395,5 @@ export const ListPdInputs = (pdFilePath: string): Array<PdInput> => {
   const pdFile = fs.readFileSync(pdFilePath, "utf8");
   const lines = pdFile.split(";").map((line) => line.replace("\n", ""));
   const parser = new PdParser(lines.map((line) => line.split(" ")));
-
   return parser.parse();
 };

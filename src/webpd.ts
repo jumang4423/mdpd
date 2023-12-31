@@ -10,7 +10,6 @@ export const IsWebPDAvailable = async () => {
     return false;
   }
 };
-
 export const GenWasmPatch = (
   pdFilePath: string,
   cacheDir: string

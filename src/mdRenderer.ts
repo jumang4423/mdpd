@@ -477,7 +477,6 @@ const customRenderer = (baseDir: string) => {
     const href_html = href_name + ".html";
     return `<a href="${href_html}">`;
   }
-
   // override image render
   md.renderer.rules.image = (tokens, idx, options, env, self) => {
     const token = tokens[idx]!;
@@ -606,16 +605,13 @@ const sendMsgToWebPd_${prefix} = (nodeId, portletId, message) => {
   })
 }
 
-
 ${pdInputs
   .map((pdInput) => RenderPdInputSendMsgFunction(pdInput, prefix))
   .join("\n")}
-
 volume_${prefix}.oninput = (e) => {
   const gainValue = Number(e.target.value)
   gainNode_${prefix}.gain.setValueAtTime(gainValue, audioContext_${prefix}.currentTime)
 }
-
 </script>
 `;
     } else {
@@ -649,7 +645,6 @@ volume_${prefix}.oninput = (e) => {
 export function getMarkdownFiles(dir: string, baseDir: string, fileList: string[] = []) {
   // Read the directory
   const files = fs.readdirSync(dir);
-
   // Iterate over each file/directory in the current directory
   files.forEach(file => {
     const filePath = path.join(dir, file);
@@ -725,7 +720,6 @@ const genWasmPatches = async (
   const markdown = fs.readFileSync(markdownPath, "utf8");
   const md = forCountPdRenderer(compileTasks);
   md.render(markdown);
-
   console.log("compiling wasm patches...");
   for (const task of compileTasks) {
     const wasmPath = GenWasmPatch(baseDir + "/" + task, cacheDir).unwrap();
