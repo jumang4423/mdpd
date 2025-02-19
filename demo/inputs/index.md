@@ -1,5 +1,9 @@
 open browser console to show log
 
+# Generic FM Synth
+
+![fbfm](./fbfm.pd)
+
 # Message
 
 ![msg](./msg.pd)
@@ -43,3 +47,5 @@ open browser console to show log
 # Hradio
 
 ![hradio](./hradio.pd)
+
+![msg](./msg.pd)

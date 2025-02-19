@@ -7,9 +7,2468 @@
       <script src="webpd-runtime.js"></script>
       <div>
         <link href="https://pvinis.github.io/iosevka-webfont/3.4.1/iosevka.css" rel="stylesheet" />
-        <h1>mdpd tutorials</h1>
-<p><a href="tutorial_0.html">tutorial_0</a></p>
-<p><a href="tutorial_1.html">tutorial_1</a></p>
+        <p>open browser console to show log</p>
+<h1>Generic FM Synth</h1>
+<p>
+<style>
+#fbfm {
+  background-color: #eee;
+  padding: 4px;
+}
+#onoff_fbfm {
+  margin: 4px 4px 4px 0;
+}
+</style>
+<div id="fbfm">
+  <div> fbfm.pd patch demo</div>
+  <button id="onoff_fbfm"> loading... </button>
+  <div id="inputs_fbfm">
+    <div>
+      - volume:
+      <input id="volume_fbfm" type="range" min="0" max="1" step="0.01" value="0.5"> </input>
+    </div>
+    
+<div>
+  - osc1:
+  <input id="hsl_fbfm_0" type="range" min="0" max="1270" step="1" value="0"> </input>
+</div>
+
+
+<div>
+  - osc2:
+  <input id="hsl_fbfm_1" type="range" min="0" max="127" step="1" value="0"> </input>
+</div>
+
+
+<div>
+  - osc2amp:
+  <input id="hsl_fbfm_2" type="range" min="0" max="127" step="1" value="0"> </input>
+</div>
+
+  </div>
+</div>
+<script>
+let audioContext_fbfm = null
+
+// nodes
+let gainNode_fbfm = null
+
+// elements
+const onoffButton_fbfm = document.querySelector("#onoff_fbfm")
+const volume_fbfm = document.querySelector("#volume_fbfm")
+
+// idunno
+let patch_fbfm = null
+let stream_fbfm = null
+let webpdNode_fbfm = null
+let isPlaying_fbfm = false
+
+const initApp_fbfm = async () => {
+  stream_fbfm = await navigator.mediaDevices.getUserMedia({ audio: true })
+  audioContext_fbfm = new AudioContext()
+  await WebPdRuntime.registerWebPdWorkletNode(audioContext_fbfm)
+  response = await fetch("fbfm.wasm")
+  patch_fbfm = await response.arrayBuffer()
+  onoffButton_fbfm.style.display = 'block'
+  onoffButton_fbfm.innerText = 'start patch'
+  inputs_fbfm.style.display = 'none'
+}
+
+const initVolume_fbfm = () => {
+  const init_vol = 0.5
+  gainNode_fbfm.gain.setValueAtTime(init_vol, audioContext_fbfm.currentTime)
+  volume_fbfm.value = init_vol
+}
+
+
+const initHsl_fbfm_0 = () => {
+  hsl_fbfm_0.value = 635
+  setTimeout(() => {
+    
+sendMsgToWebPd_fbfm("n_0_0", "0", [635]);
+
+  }, 100)
+}
+
+
+const initHsl_fbfm_1 = () => {
+  hsl_fbfm_1.value = 63.5
+  setTimeout(() => {
+    
+sendMsgToWebPd_fbfm("n_0_1", "0", [63.5]);
+
+  }, 100)
+}
+
+
+const initHsl_fbfm_2 = () => {
+  hsl_fbfm_2.value = 63.5
+  setTimeout(() => {
+    
+sendMsgToWebPd_fbfm("n_0_2", "0", [63.5]);
+
+  }, 100)
+}
+
+
+const startApp_fbfm = async () => {
+  if (audioContext_fbfm.state === 'suspended') {
+    audioContext_fbfm.resume()
+  }
+  const sourceNode = audioContext_fbfm.createMediaStreamSource(stream_fbfm)
+  webpdNode_fbfm = new WebPdRuntime.WebPdWorkletNode(audioContext_fbfm)
+  gainNode_fbfm = audioContext_fbfm.createGain()
+  sourceNode.connect(webpdNode_fbfm).connect(gainNode_fbfm).connect(audioContext_fbfm.destination)
+  webpdNode_fbfm.port.onmessage = (message) => WebPdRuntime.fs.web(webpdNode_fbfm, message)
+  webpdNode_fbfm.port.postMessage({
+    type: 'code:WASM',
+    payload: {
+      wasmBuffer: patch_fbfm,
+    },
+  })
+
+  initVolume_fbfm()
+  
+initHsl_fbfm_0()
+
+
+initHsl_fbfm_1()
+
+
+initHsl_fbfm_2()
+
+  isPlaying_fbfm = true
+  onoffButton_fbfm.innerText = 'stop patch'
+  inputs_fbfm.style.display = 'block'
+}
+
+const stopApp_fbfm = () => {
+  webpdNode_fbfm.disconnect(gainNode_fbfm)
+  gainNode_fbfm.disconnect(audioContext_fbfm.destination)
+  audioContext_fbfm.suspend()
+
+  onoffButton_fbfm.innerText = 'start patch'
+  isPlaying_fbfm = false
+  inputs_fbfm.style.display = 'none'
+}
+
+onoffButton_fbfm.onclick = () => {
+  if (isPlaying_fbfm) {
+    stopApp_fbfm()
+  } else {
+    startApp_fbfm()
+  }
+}
+
+initApp_fbfm().
+  then(() => {
+    console.log('_fbfm patch wasm initialized')
+})
+const sendMsgToWebPd_fbfm = (nodeId, portletId, message) => {
+  webpdNode_fbfm.port.postMessage({
+    type: 'inletCaller',
+    payload: {
+      nodeId,
+      portletId,
+      message,
+    },
+  })
+}
+
+
+const hsl_fbfm_0 = document.querySelector("#hsl_fbfm_0")
+hsl_fbfm_0.oninput = (e) => {
+  
+sendMsgToWebPd_fbfm("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const hsl_fbfm_1 = document.querySelector("#hsl_fbfm_1")
+hsl_fbfm_1.oninput = (e) => {
+  
+sendMsgToWebPd_fbfm("n_0_1", "0", [Number(e.target.value)]);
+
+}
+
+
+const hsl_fbfm_2 = document.querySelector("#hsl_fbfm_2")
+hsl_fbfm_2.oninput = (e) => {
+  
+sendMsgToWebPd_fbfm("n_0_2", "0", [Number(e.target.value)]);
+
+}
+
+volume_fbfm.oninput = (e) => {
+  const gainValue = Number(e.target.value)
+  gainNode_fbfm.gain.setValueAtTime(gainValue, audioContext_fbfm.currentTime)
+}
+</script>
+</p>
+<h1>Message</h1>
+<p>
+<style>
+#msg {
+  background-color: #eee;
+  padding: 4px;
+}
+#onoff_msg {
+  margin: 4px 4px 4px 0;
+}
+</style>
+<div id="msg">
+  <div> msg.pd patch demo</div>
+  <button id="onoff_msg"> loading... </button>
+  <div id="inputs_msg">
+    <div>
+      - volume:
+      <input id="volume_msg" type="range" min="0" max="1" step="0.01" value="0.5"> </input>
+    </div>
+    
+<div>
+  - msg!!!!:
+  <button id="msg_msg_0"> send </button>
+</div>
+
+  </div>
+</div>
+<script>
+let audioContext_msg = null
+
+// nodes
+let gainNode_msg = null
+
+// elements
+const onoffButton_msg = document.querySelector("#onoff_msg")
+const volume_msg = document.querySelector("#volume_msg")
+
+// idunno
+let patch_msg = null
+let stream_msg = null
+let webpdNode_msg = null
+let isPlaying_msg = false
+
+const initApp_msg = async () => {
+  stream_msg = await navigator.mediaDevices.getUserMedia({ audio: true })
+  audioContext_msg = new AudioContext()
+  await WebPdRuntime.registerWebPdWorkletNode(audioContext_msg)
+  response = await fetch("msg.wasm")
+  patch_msg = await response.arrayBuffer()
+  onoffButton_msg.style.display = 'block'
+  onoffButton_msg.innerText = 'start patch'
+  inputs_msg.style.display = 'none'
+}
+
+const initVolume_msg = () => {
+  const init_vol = 0.5
+  gainNode_msg.gain.setValueAtTime(init_vol, audioContext_msg.currentTime)
+  volume_msg.value = init_vol
+}
+
+
+const initMsg_msg_0 = () => {
+}
+
+
+const startApp_msg = async () => {
+  if (audioContext_msg.state === 'suspended') {
+    audioContext_msg.resume()
+  }
+  const sourceNode = audioContext_msg.createMediaStreamSource(stream_msg)
+  webpdNode_msg = new WebPdRuntime.WebPdWorkletNode(audioContext_msg)
+  gainNode_msg = audioContext_msg.createGain()
+  sourceNode.connect(webpdNode_msg).connect(gainNode_msg).connect(audioContext_msg.destination)
+  webpdNode_msg.port.onmessage = (message) => WebPdRuntime.fs.web(webpdNode_msg, message)
+  webpdNode_msg.port.postMessage({
+    type: 'code:WASM',
+    payload: {
+      wasmBuffer: patch_msg,
+    },
+  })
+
+  initVolume_msg()
+  
+initMsg_msg_0()
+
+  isPlaying_msg = true
+  onoffButton_msg.innerText = 'stop patch'
+  inputs_msg.style.display = 'block'
+}
+
+const stopApp_msg = () => {
+  webpdNode_msg.disconnect(gainNode_msg)
+  gainNode_msg.disconnect(audioContext_msg.destination)
+  audioContext_msg.suspend()
+
+  onoffButton_msg.innerText = 'start patch'
+  isPlaying_msg = false
+  inputs_msg.style.display = 'none'
+}
+
+onoffButton_msg.onclick = () => {
+  if (isPlaying_msg) {
+    stopApp_msg()
+  } else {
+    startApp_msg()
+  }
+}
+
+initApp_msg().
+  then(() => {
+    console.log('_msg patch wasm initialized')
+})
+const sendMsgToWebPd_msg = (nodeId, portletId, message) => {
+  webpdNode_msg.port.postMessage({
+    type: 'inletCaller',
+    payload: {
+      nodeId,
+      portletId,
+      message,
+    },
+  })
+}
+
+
+const msg_msg_0 = document.querySelector("#msg_msg_0")
+msg_msg_0.onclick = () => {
+  
+sendMsgToWebPd_msg("n_0_0", "0", ["bang"]);
+
+}
+
+volume_msg.oninput = (e) => {
+  const gainValue = Number(e.target.value)
+  gainNode_msg.gain.setValueAtTime(gainValue, audioContext_msg.currentTime)
+}
+</script>
+</p>
+<h1>List</h1>
+<p>
+<style>
+#listbox {
+  background-color: #eee;
+  padding: 4px;
+}
+#onoff_listbox {
+  margin: 4px 4px 4px 0;
+}
+</style>
+<div id="listbox">
+  <div> listbox.pd patch demo</div>
+  <button id="onoff_listbox"> loading... </button>
+  <div id="inputs_listbox">
+    <div>
+      - volume:
+      <input id="volume_listbox" type="range" min="0" max="1" step="0.01" value="0.5"> </input>
+    </div>
+    
+<div>
+  - aaaaaaaa:
+  <input id="listbox_listbox_0"></input>
+</div>
+
+  </div>
+</div>
+<script>
+let audioContext_listbox = null
+
+// nodes
+let gainNode_listbox = null
+
+// elements
+const onoffButton_listbox = document.querySelector("#onoff_listbox")
+const volume_listbox = document.querySelector("#volume_listbox")
+
+// idunno
+let patch_listbox = null
+let stream_listbox = null
+let webpdNode_listbox = null
+let isPlaying_listbox = false
+
+const initApp_listbox = async () => {
+  stream_listbox = await navigator.mediaDevices.getUserMedia({ audio: true })
+  audioContext_listbox = new AudioContext()
+  await WebPdRuntime.registerWebPdWorkletNode(audioContext_listbox)
+  response = await fetch("listbox.wasm")
+  patch_listbox = await response.arrayBuffer()
+  onoffButton_listbox.style.display = 'block'
+  onoffButton_listbox.innerText = 'start patch'
+  inputs_listbox.style.display = 'none'
+}
+
+const initVolume_listbox = () => {
+  const init_vol = 0.5
+  gainNode_listbox.gain.setValueAtTime(init_vol, audioContext_listbox.currentTime)
+  volume_listbox.value = init_vol
+}
+
+
+const initListbox_listbox_0 = () => {
+}
+
+
+const startApp_listbox = async () => {
+  if (audioContext_listbox.state === 'suspended') {
+    audioContext_listbox.resume()
+  }
+  const sourceNode = audioContext_listbox.createMediaStreamSource(stream_listbox)
+  webpdNode_listbox = new WebPdRuntime.WebPdWorkletNode(audioContext_listbox)
+  gainNode_listbox = audioContext_listbox.createGain()
+  sourceNode.connect(webpdNode_listbox).connect(gainNode_listbox).connect(audioContext_listbox.destination)
+  webpdNode_listbox.port.onmessage = (message) => WebPdRuntime.fs.web(webpdNode_listbox, message)
+  webpdNode_listbox.port.postMessage({
+    type: 'code:WASM',
+    payload: {
+      wasmBuffer: patch_listbox,
+    },
+  })
+
+  initVolume_listbox()
+  
+initListbox_listbox_0()
+
+  isPlaying_listbox = true
+  onoffButton_listbox.innerText = 'stop patch'
+  inputs_listbox.style.display = 'block'
+}
+
+const stopApp_listbox = () => {
+  webpdNode_listbox.disconnect(gainNode_listbox)
+  gainNode_listbox.disconnect(audioContext_listbox.destination)
+  audioContext_listbox.suspend()
+
+  onoffButton_listbox.innerText = 'start patch'
+  isPlaying_listbox = false
+  inputs_listbox.style.display = 'none'
+}
+
+onoffButton_listbox.onclick = () => {
+  if (isPlaying_listbox) {
+    stopApp_listbox()
+  } else {
+    startApp_listbox()
+  }
+}
+
+initApp_listbox().
+  then(() => {
+    console.log('_listbox patch wasm initialized')
+})
+const sendMsgToWebPd_listbox = (nodeId, portletId, message) => {
+  webpdNode_listbox.port.postMessage({
+    type: 'inletCaller',
+    payload: {
+      nodeId,
+      portletId,
+      message,
+    },
+  })
+}
+
+
+const listbox_listbox_0 = document.querySelector("#listbox_listbox_0")
+listbox_listbox_0.onchange = (e) => {
+  
+sendMsgToWebPd_listbox("n_0_0", "0", e.target.value.split(" "));
+
+}
+
+volume_listbox.oninput = (e) => {
+  const gainValue = Number(e.target.value)
+  gainNode_listbox.gain.setValueAtTime(gainValue, audioContext_listbox.currentTime)
+}
+</script>
+</p>
+<h1>Symbol</h1>
+<p>
+<style>
+#symbolatom {
+  background-color: #eee;
+  padding: 4px;
+}
+#onoff_symbolatom {
+  margin: 4px 4px 4px 0;
+}
+</style>
+<div id="symbolatom">
+  <div> symbolatom.pd patch demo</div>
+  <button id="onoff_symbolatom"> loading... </button>
+  <div id="inputs_symbolatom">
+    <div>
+      - volume:
+      <input id="volume_symbolatom" type="range" min="0" max="1" step="0.01" value="0.5"> </input>
+    </div>
+    
+<div>
+  - symbol:
+  <input id="symbolatom_symbolatom_0"></input>
+</div>
+
+  </div>
+</div>
+<script>
+let audioContext_symbolatom = null
+
+// nodes
+let gainNode_symbolatom = null
+
+// elements
+const onoffButton_symbolatom = document.querySelector("#onoff_symbolatom")
+const volume_symbolatom = document.querySelector("#volume_symbolatom")
+
+// idunno
+let patch_symbolatom = null
+let stream_symbolatom = null
+let webpdNode_symbolatom = null
+let isPlaying_symbolatom = false
+
+const initApp_symbolatom = async () => {
+  stream_symbolatom = await navigator.mediaDevices.getUserMedia({ audio: true })
+  audioContext_symbolatom = new AudioContext()
+  await WebPdRuntime.registerWebPdWorkletNode(audioContext_symbolatom)
+  response = await fetch("symbolatom.wasm")
+  patch_symbolatom = await response.arrayBuffer()
+  onoffButton_symbolatom.style.display = 'block'
+  onoffButton_symbolatom.innerText = 'start patch'
+  inputs_symbolatom.style.display = 'none'
+}
+
+const initVolume_symbolatom = () => {
+  const init_vol = 0.5
+  gainNode_symbolatom.gain.setValueAtTime(init_vol, audioContext_symbolatom.currentTime)
+  volume_symbolatom.value = init_vol
+}
+
+
+const initSymbolatom_symbolatom_0 = () => {
+}
+
+
+const startApp_symbolatom = async () => {
+  if (audioContext_symbolatom.state === 'suspended') {
+    audioContext_symbolatom.resume()
+  }
+  const sourceNode = audioContext_symbolatom.createMediaStreamSource(stream_symbolatom)
+  webpdNode_symbolatom = new WebPdRuntime.WebPdWorkletNode(audioContext_symbolatom)
+  gainNode_symbolatom = audioContext_symbolatom.createGain()
+  sourceNode.connect(webpdNode_symbolatom).connect(gainNode_symbolatom).connect(audioContext_symbolatom.destination)
+  webpdNode_symbolatom.port.onmessage = (message) => WebPdRuntime.fs.web(webpdNode_symbolatom, message)
+  webpdNode_symbolatom.port.postMessage({
+    type: 'code:WASM',
+    payload: {
+      wasmBuffer: patch_symbolatom,
+    },
+  })
+
+  initVolume_symbolatom()
+  
+initSymbolatom_symbolatom_0()
+
+  isPlaying_symbolatom = true
+  onoffButton_symbolatom.innerText = 'stop patch'
+  inputs_symbolatom.style.display = 'block'
+}
+
+const stopApp_symbolatom = () => {
+  webpdNode_symbolatom.disconnect(gainNode_symbolatom)
+  gainNode_symbolatom.disconnect(audioContext_symbolatom.destination)
+  audioContext_symbolatom.suspend()
+
+  onoffButton_symbolatom.innerText = 'start patch'
+  isPlaying_symbolatom = false
+  inputs_symbolatom.style.display = 'none'
+}
+
+onoffButton_symbolatom.onclick = () => {
+  if (isPlaying_symbolatom) {
+    stopApp_symbolatom()
+  } else {
+    startApp_symbolatom()
+  }
+}
+
+initApp_symbolatom().
+  then(() => {
+    console.log('_symbolatom patch wasm initialized')
+})
+const sendMsgToWebPd_symbolatom = (nodeId, portletId, message) => {
+  webpdNode_symbolatom.port.postMessage({
+    type: 'inletCaller',
+    payload: {
+      nodeId,
+      portletId,
+      message,
+    },
+  })
+}
+
+
+const symbolatom_symbolatom_0 = document.querySelector("#symbolatom_symbolatom_0")
+symbolatom_symbolatom_0.onchange = (e) => {
+  
+sendMsgToWebPd_symbolatom("n_0_0", "0", [e.target.value]);
+
+}
+
+volume_symbolatom.oninput = (e) => {
+  const gainValue = Number(e.target.value)
+  gainNode_symbolatom.gain.setValueAtTime(gainValue, audioContext_symbolatom.currentTime)
+}
+</script>
+</p>
+<h1>Bang</h1>
+<p>
+<style>
+#bang {
+  background-color: #eee;
+  padding: 4px;
+}
+#onoff_bng {
+  margin: 4px 4px 4px 0;
+}
+</style>
+<div id="bang">
+  <div> bng.pd patch demo</div>
+  <button id="onoff_bng"> loading... </button>
+  <div id="inputs_bng">
+    <div>
+      - volume:
+      <input id="volume_bng" type="range" min="0" max="1" step="0.01" value="0.5"> </input>
+    </div>
+    
+<div>
+  - empty:
+  <button id="bng_bng_0"> bang </button>
+</div>
+
+
+<div>
+  - bang!!!!:
+  <button id="msg_bng_1"> send </button>
+</div>
+
+  </div>
+</div>
+<script>
+let audioContext_bng = null
+
+// nodes
+let gainNode_bng = null
+
+// elements
+const onoffButton_bng = document.querySelector("#onoff_bng")
+const volume_bng = document.querySelector("#volume_bng")
+
+// idunno
+let patch_bng = null
+let stream_bng = null
+let webpdNode_bng = null
+let isPlaying_bng = false
+
+const initApp_bng = async () => {
+  stream_bng = await navigator.mediaDevices.getUserMedia({ audio: true })
+  audioContext_bng = new AudioContext()
+  await WebPdRuntime.registerWebPdWorkletNode(audioContext_bng)
+  response = await fetch("bng.wasm")
+  patch_bng = await response.arrayBuffer()
+  onoffButton_bng.style.display = 'block'
+  onoffButton_bng.innerText = 'start patch'
+  inputs_bng.style.display = 'none'
+}
+
+const initVolume_bng = () => {
+  const init_vol = 0.5
+  gainNode_bng.gain.setValueAtTime(init_vol, audioContext_bng.currentTime)
+  volume_bng.value = init_vol
+}
+
+
+const initBng_bng_0 = () => {
+}
+
+
+const initMsg_bng_1 = () => {
+}
+
+
+const startApp_bng = async () => {
+  if (audioContext_bng.state === 'suspended') {
+    audioContext_bng.resume()
+  }
+  const sourceNode = audioContext_bng.createMediaStreamSource(stream_bng)
+  webpdNode_bng = new WebPdRuntime.WebPdWorkletNode(audioContext_bng)
+  gainNode_bng = audioContext_bng.createGain()
+  sourceNode.connect(webpdNode_bng).connect(gainNode_bng).connect(audioContext_bng.destination)
+  webpdNode_bng.port.onmessage = (message) => WebPdRuntime.fs.web(webpdNode_bng, message)
+  webpdNode_bng.port.postMessage({
+    type: 'code:WASM',
+    payload: {
+      wasmBuffer: patch_bng,
+    },
+  })
+
+  initVolume_bng()
+  
+initBng_bng_0()
+
+
+initMsg_bng_1()
+
+  isPlaying_bng = true
+  onoffButton_bng.innerText = 'stop patch'
+  inputs_bng.style.display = 'block'
+}
+
+const stopApp_bng = () => {
+  webpdNode_bng.disconnect(gainNode_bng)
+  gainNode_bng.disconnect(audioContext_bng.destination)
+  audioContext_bng.suspend()
+
+  onoffButton_bng.innerText = 'start patch'
+  isPlaying_bng = false
+  inputs_bng.style.display = 'none'
+}
+
+onoffButton_bng.onclick = () => {
+  if (isPlaying_bng) {
+    stopApp_bng()
+  } else {
+    startApp_bng()
+  }
+}
+
+initApp_bng().
+  then(() => {
+    console.log('_bng patch wasm initialized')
+})
+const sendMsgToWebPd_bng = (nodeId, portletId, message) => {
+  webpdNode_bng.port.postMessage({
+    type: 'inletCaller',
+    payload: {
+      nodeId,
+      portletId,
+      message,
+    },
+  })
+}
+
+
+const bng_bng_0 = document.querySelector("#bng_bng_0")
+bng_bng_0.onclick = () => {
+  
+sendMsgToWebPd_bng("n_0_0", "0", ["bang"]);
+
+}
+
+
+const msg_bng_1 = document.querySelector("#msg_bng_1")
+msg_bng_1.onclick = () => {
+  
+sendMsgToWebPd_bng("n_0_1", "0", ["bang"]);
+
+}
+
+volume_bng.oninput = (e) => {
+  const gainValue = Number(e.target.value)
+  gainNode_bng.gain.setValueAtTime(gainValue, audioContext_bng.currentTime)
+}
+</script>
+</p>
+<h1>Hslider</h1>
+<p>
+<style>
+#hsl {
+  background-color: #eee;
+  padding: 4px;
+}
+#onoff_hsl {
+  margin: 4px 4px 4px 0;
+}
+</style>
+<div id="hsl">
+  <div> hsl.pd patch demo</div>
+  <button id="onoff_hsl"> loading... </button>
+  <div id="inputs_hsl">
+    <div>
+      - volume:
+      <input id="volume_hsl" type="range" min="0" max="1" step="0.01" value="0.5"> </input>
+    </div>
+    
+<div>
+  - slide_me:
+  <input id="hsl_hsl_0" type="range" min="0" max="127" step="1" value="0"> </input>
+</div>
+
+  </div>
+</div>
+<script>
+let audioContext_hsl = null
+
+// nodes
+let gainNode_hsl = null
+
+// elements
+const onoffButton_hsl = document.querySelector("#onoff_hsl")
+const volume_hsl = document.querySelector("#volume_hsl")
+
+// idunno
+let patch_hsl = null
+let stream_hsl = null
+let webpdNode_hsl = null
+let isPlaying_hsl = false
+
+const initApp_hsl = async () => {
+  stream_hsl = await navigator.mediaDevices.getUserMedia({ audio: true })
+  audioContext_hsl = new AudioContext()
+  await WebPdRuntime.registerWebPdWorkletNode(audioContext_hsl)
+  response = await fetch("hsl.wasm")
+  patch_hsl = await response.arrayBuffer()
+  onoffButton_hsl.style.display = 'block'
+  onoffButton_hsl.innerText = 'start patch'
+  inputs_hsl.style.display = 'none'
+}
+
+const initVolume_hsl = () => {
+  const init_vol = 0.5
+  gainNode_hsl.gain.setValueAtTime(init_vol, audioContext_hsl.currentTime)
+  volume_hsl.value = init_vol
+}
+
+
+const initHsl_hsl_0 = () => {
+  hsl_hsl_0.value = 63.5
+  setTimeout(() => {
+    
+sendMsgToWebPd_hsl("n_0_0", "0", [63.5]);
+
+  }, 100)
+}
+
+
+const startApp_hsl = async () => {
+  if (audioContext_hsl.state === 'suspended') {
+    audioContext_hsl.resume()
+  }
+  const sourceNode = audioContext_hsl.createMediaStreamSource(stream_hsl)
+  webpdNode_hsl = new WebPdRuntime.WebPdWorkletNode(audioContext_hsl)
+  gainNode_hsl = audioContext_hsl.createGain()
+  sourceNode.connect(webpdNode_hsl).connect(gainNode_hsl).connect(audioContext_hsl.destination)
+  webpdNode_hsl.port.onmessage = (message) => WebPdRuntime.fs.web(webpdNode_hsl, message)
+  webpdNode_hsl.port.postMessage({
+    type: 'code:WASM',
+    payload: {
+      wasmBuffer: patch_hsl,
+    },
+  })
+
+  initVolume_hsl()
+  
+initHsl_hsl_0()
+
+  isPlaying_hsl = true
+  onoffButton_hsl.innerText = 'stop patch'
+  inputs_hsl.style.display = 'block'
+}
+
+const stopApp_hsl = () => {
+  webpdNode_hsl.disconnect(gainNode_hsl)
+  gainNode_hsl.disconnect(audioContext_hsl.destination)
+  audioContext_hsl.suspend()
+
+  onoffButton_hsl.innerText = 'start patch'
+  isPlaying_hsl = false
+  inputs_hsl.style.display = 'none'
+}
+
+onoffButton_hsl.onclick = () => {
+  if (isPlaying_hsl) {
+    stopApp_hsl()
+  } else {
+    startApp_hsl()
+  }
+}
+
+initApp_hsl().
+  then(() => {
+    console.log('_hsl patch wasm initialized')
+})
+const sendMsgToWebPd_hsl = (nodeId, portletId, message) => {
+  webpdNode_hsl.port.postMessage({
+    type: 'inletCaller',
+    payload: {
+      nodeId,
+      portletId,
+      message,
+    },
+  })
+}
+
+
+const hsl_hsl_0 = document.querySelector("#hsl_hsl_0")
+hsl_hsl_0.oninput = (e) => {
+  
+sendMsgToWebPd_hsl("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+volume_hsl.oninput = (e) => {
+  const gainValue = Number(e.target.value)
+  gainNode_hsl.gain.setValueAtTime(gainValue, audioContext_hsl.currentTime)
+}
+</script>
+</p>
+<h1>Vslider</h1>
+<p>
+<style>
+#vsl {
+  background-color: #eee;
+  padding: 4px;
+}
+#onoff_vsl {
+  margin: 4px 4px 4px 0;
+}
+</style>
+<div id="vsl">
+  <div> vsl.pd patch demo</div>
+  <button id="onoff_vsl"> loading... </button>
+  <div id="inputs_vsl">
+    <div>
+      - volume:
+      <input id="volume_vsl" type="range" min="0" max="1" step="0.01" value="0.5"> </input>
+    </div>
+    
+<div>
+  - slide_me:
+  <input id="vsl_vsl_0" type="range" min="0" max="127" step="1" value="0"> </input>
+</div>
+
+  </div>
+</div>
+<script>
+let audioContext_vsl = null
+
+// nodes
+let gainNode_vsl = null
+
+// elements
+const onoffButton_vsl = document.querySelector("#onoff_vsl")
+const volume_vsl = document.querySelector("#volume_vsl")
+
+// idunno
+let patch_vsl = null
+let stream_vsl = null
+let webpdNode_vsl = null
+let isPlaying_vsl = false
+
+const initApp_vsl = async () => {
+  stream_vsl = await navigator.mediaDevices.getUserMedia({ audio: true })
+  audioContext_vsl = new AudioContext()
+  await WebPdRuntime.registerWebPdWorkletNode(audioContext_vsl)
+  response = await fetch("vsl.wasm")
+  patch_vsl = await response.arrayBuffer()
+  onoffButton_vsl.style.display = 'block'
+  onoffButton_vsl.innerText = 'start patch'
+  inputs_vsl.style.display = 'none'
+}
+
+const initVolume_vsl = () => {
+  const init_vol = 0.5
+  gainNode_vsl.gain.setValueAtTime(init_vol, audioContext_vsl.currentTime)
+  volume_vsl.value = init_vol
+}
+
+
+const initVsl_vsl_0 = () => {
+  vsl_vsl_0.value = 63.5
+  setTimeout(() => {
+    
+sendMsgToWebPd_vsl("n_0_0", "0", [63.5]);
+
+  }, 100)
+}
+
+
+const startApp_vsl = async () => {
+  if (audioContext_vsl.state === 'suspended') {
+    audioContext_vsl.resume()
+  }
+  const sourceNode = audioContext_vsl.createMediaStreamSource(stream_vsl)
+  webpdNode_vsl = new WebPdRuntime.WebPdWorkletNode(audioContext_vsl)
+  gainNode_vsl = audioContext_vsl.createGain()
+  sourceNode.connect(webpdNode_vsl).connect(gainNode_vsl).connect(audioContext_vsl.destination)
+  webpdNode_vsl.port.onmessage = (message) => WebPdRuntime.fs.web(webpdNode_vsl, message)
+  webpdNode_vsl.port.postMessage({
+    type: 'code:WASM',
+    payload: {
+      wasmBuffer: patch_vsl,
+    },
+  })
+
+  initVolume_vsl()
+  
+initVsl_vsl_0()
+
+  isPlaying_vsl = true
+  onoffButton_vsl.innerText = 'stop patch'
+  inputs_vsl.style.display = 'block'
+}
+
+const stopApp_vsl = () => {
+  webpdNode_vsl.disconnect(gainNode_vsl)
+  gainNode_vsl.disconnect(audioContext_vsl.destination)
+  audioContext_vsl.suspend()
+
+  onoffButton_vsl.innerText = 'start patch'
+  isPlaying_vsl = false
+  inputs_vsl.style.display = 'none'
+}
+
+onoffButton_vsl.onclick = () => {
+  if (isPlaying_vsl) {
+    stopApp_vsl()
+  } else {
+    startApp_vsl()
+  }
+}
+
+initApp_vsl().
+  then(() => {
+    console.log('_vsl patch wasm initialized')
+})
+const sendMsgToWebPd_vsl = (nodeId, portletId, message) => {
+  webpdNode_vsl.port.postMessage({
+    type: 'inletCaller',
+    payload: {
+      nodeId,
+      portletId,
+      message,
+    },
+  })
+}
+
+
+const vsl_vsl_0 = document.querySelector("#vsl_vsl_0")
+vsl_vsl_0.oninput = (e) => {
+  
+sendMsgToWebPd_vsl("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+volume_vsl.oninput = (e) => {
+  const gainValue = Number(e.target.value)
+  gainNode_vsl.gain.setValueAtTime(gainValue, audioContext_vsl.currentTime)
+}
+</script>
+</p>
+<h1>Number</h1>
+<p>
+<style>
+#floatatom {
+  background-color: #eee;
+  padding: 4px;
+}
+#onoff_floatatom {
+  margin: 4px 4px 4px 0;
+}
+</style>
+<div id="floatatom">
+  <div> floatatom.pd patch demo</div>
+  <button id="onoff_floatatom"> loading... </button>
+  <div id="inputs_floatatom">
+    <div>
+      - volume:
+      <input id="volume_floatatom" type="range" min="0" max="1" step="0.01" value="0.5"> </input>
+    </div>
+    
+<div>
+  - change_me:
+  <input id="floatatom_floatatom_0" type="number" value=0> </input>
+</div>
+
+  </div>
+</div>
+<script>
+let audioContext_floatatom = null
+
+// nodes
+let gainNode_floatatom = null
+
+// elements
+const onoffButton_floatatom = document.querySelector("#onoff_floatatom")
+const volume_floatatom = document.querySelector("#volume_floatatom")
+
+// idunno
+let patch_floatatom = null
+let stream_floatatom = null
+let webpdNode_floatatom = null
+let isPlaying_floatatom = false
+
+const initApp_floatatom = async () => {
+  stream_floatatom = await navigator.mediaDevices.getUserMedia({ audio: true })
+  audioContext_floatatom = new AudioContext()
+  await WebPdRuntime.registerWebPdWorkletNode(audioContext_floatatom)
+  response = await fetch("floatatom.wasm")
+  patch_floatatom = await response.arrayBuffer()
+  onoffButton_floatatom.style.display = 'block'
+  onoffButton_floatatom.innerText = 'start patch'
+  inputs_floatatom.style.display = 'none'
+}
+
+const initVolume_floatatom = () => {
+  const init_vol = 0.5
+  gainNode_floatatom.gain.setValueAtTime(init_vol, audioContext_floatatom.currentTime)
+  volume_floatatom.value = init_vol
+}
+
+
+const initFloatatom_floatatom_0 = () => {
+}
+
+
+const startApp_floatatom = async () => {
+  if (audioContext_floatatom.state === 'suspended') {
+    audioContext_floatatom.resume()
+  }
+  const sourceNode = audioContext_floatatom.createMediaStreamSource(stream_floatatom)
+  webpdNode_floatatom = new WebPdRuntime.WebPdWorkletNode(audioContext_floatatom)
+  gainNode_floatatom = audioContext_floatatom.createGain()
+  sourceNode.connect(webpdNode_floatatom).connect(gainNode_floatatom).connect(audioContext_floatatom.destination)
+  webpdNode_floatatom.port.onmessage = (message) => WebPdRuntime.fs.web(webpdNode_floatatom, message)
+  webpdNode_floatatom.port.postMessage({
+    type: 'code:WASM',
+    payload: {
+      wasmBuffer: patch_floatatom,
+    },
+  })
+
+  initVolume_floatatom()
+  
+initFloatatom_floatatom_0()
+
+  isPlaying_floatatom = true
+  onoffButton_floatatom.innerText = 'stop patch'
+  inputs_floatatom.style.display = 'block'
+}
+
+const stopApp_floatatom = () => {
+  webpdNode_floatatom.disconnect(gainNode_floatatom)
+  gainNode_floatatom.disconnect(audioContext_floatatom.destination)
+  audioContext_floatatom.suspend()
+
+  onoffButton_floatatom.innerText = 'start patch'
+  isPlaying_floatatom = false
+  inputs_floatatom.style.display = 'none'
+}
+
+onoffButton_floatatom.onclick = () => {
+  if (isPlaying_floatatom) {
+    stopApp_floatatom()
+  } else {
+    startApp_floatatom()
+  }
+}
+
+initApp_floatatom().
+  then(() => {
+    console.log('_floatatom patch wasm initialized')
+})
+const sendMsgToWebPd_floatatom = (nodeId, portletId, message) => {
+  webpdNode_floatatom.port.postMessage({
+    type: 'inletCaller',
+    payload: {
+      nodeId,
+      portletId,
+      message,
+    },
+  })
+}
+
+
+const floatatom_floatatom_0 = document.querySelector("#floatatom_floatatom_0")
+floatatom_floatatom_0.onchange = (e) => {
+  
+sendMsgToWebPd_floatatom("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+volume_floatatom.oninput = (e) => {
+  const gainValue = Number(e.target.value)
+  gainNode_floatatom.gain.setValueAtTime(gainValue, audioContext_floatatom.currentTime)
+}
+</script>
+</p>
+<h1>Number2</h1>
+<p>
+<style>
+#nbx {
+  background-color: #eee;
+  padding: 4px;
+}
+#onoff_nbx {
+  margin: 4px 4px 4px 0;
+}
+</style>
+<div id="nbx">
+  <div> nbx.pd patch demo</div>
+  <button id="onoff_nbx"> loading... </button>
+  <div id="inputs_nbx">
+    <div>
+      - volume:
+      <input id="volume_nbx" type="range" min="0" max="1" step="0.01" value="0.5"> </input>
+    </div>
+    
+<div>
+  - change_me:
+  <input id="nbx_nbx_0" type="number" value=0> </input>
+</div>
+
+  </div>
+</div>
+<script>
+let audioContext_nbx = null
+
+// nodes
+let gainNode_nbx = null
+
+// elements
+const onoffButton_nbx = document.querySelector("#onoff_nbx")
+const volume_nbx = document.querySelector("#volume_nbx")
+
+// idunno
+let patch_nbx = null
+let stream_nbx = null
+let webpdNode_nbx = null
+let isPlaying_nbx = false
+
+const initApp_nbx = async () => {
+  stream_nbx = await navigator.mediaDevices.getUserMedia({ audio: true })
+  audioContext_nbx = new AudioContext()
+  await WebPdRuntime.registerWebPdWorkletNode(audioContext_nbx)
+  response = await fetch("nbx.wasm")
+  patch_nbx = await response.arrayBuffer()
+  onoffButton_nbx.style.display = 'block'
+  onoffButton_nbx.innerText = 'start patch'
+  inputs_nbx.style.display = 'none'
+}
+
+const initVolume_nbx = () => {
+  const init_vol = 0.5
+  gainNode_nbx.gain.setValueAtTime(init_vol, audioContext_nbx.currentTime)
+  volume_nbx.value = init_vol
+}
+
+
+const initNbx_nbx_0 = () => {
+}
+
+
+const startApp_nbx = async () => {
+  if (audioContext_nbx.state === 'suspended') {
+    audioContext_nbx.resume()
+  }
+  const sourceNode = audioContext_nbx.createMediaStreamSource(stream_nbx)
+  webpdNode_nbx = new WebPdRuntime.WebPdWorkletNode(audioContext_nbx)
+  gainNode_nbx = audioContext_nbx.createGain()
+  sourceNode.connect(webpdNode_nbx).connect(gainNode_nbx).connect(audioContext_nbx.destination)
+  webpdNode_nbx.port.onmessage = (message) => WebPdRuntime.fs.web(webpdNode_nbx, message)
+  webpdNode_nbx.port.postMessage({
+    type: 'code:WASM',
+    payload: {
+      wasmBuffer: patch_nbx,
+    },
+  })
+
+  initVolume_nbx()
+  
+initNbx_nbx_0()
+
+  isPlaying_nbx = true
+  onoffButton_nbx.innerText = 'stop patch'
+  inputs_nbx.style.display = 'block'
+}
+
+const stopApp_nbx = () => {
+  webpdNode_nbx.disconnect(gainNode_nbx)
+  gainNode_nbx.disconnect(audioContext_nbx.destination)
+  audioContext_nbx.suspend()
+
+  onoffButton_nbx.innerText = 'start patch'
+  isPlaying_nbx = false
+  inputs_nbx.style.display = 'none'
+}
+
+onoffButton_nbx.onclick = () => {
+  if (isPlaying_nbx) {
+    stopApp_nbx()
+  } else {
+    startApp_nbx()
+  }
+}
+
+initApp_nbx().
+  then(() => {
+    console.log('_nbx patch wasm initialized')
+})
+const sendMsgToWebPd_nbx = (nodeId, portletId, message) => {
+  webpdNode_nbx.port.postMessage({
+    type: 'inletCaller',
+    payload: {
+      nodeId,
+      portletId,
+      message,
+    },
+  })
+}
+
+
+const nbx_nbx_0 = document.querySelector("#nbx_nbx_0") 
+nbx_nbx_0.onchange = (e) => {
+  
+sendMsgToWebPd_nbx("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+volume_nbx.oninput = (e) => {
+  const gainValue = Number(e.target.value)
+  gainNode_nbx.gain.setValueAtTime(gainValue, audioContext_nbx.currentTime)
+}
+</script>
+</p>
+<h1>Toggle</h1>
+<p>
+<style>
+#tgl {
+  background-color: #eee;
+  padding: 4px;
+}
+#onoff_tgl {
+  margin: 4px 4px 4px 0;
+}
+</style>
+<div id="tgl">
+  <div> tgl.pd patch demo</div>
+  <button id="onoff_tgl"> loading... </button>
+  <div id="inputs_tgl">
+    <div>
+      - volume:
+      <input id="volume_tgl" type="range" min="0" max="1" step="0.01" value="0.5"> </input>
+    </div>
+    
+<div>
+  - click_me:
+  <input id="tgl_tgl_0" type="checkbox"> </input>
+</div>
+
+  </div>
+</div>
+<script>
+let audioContext_tgl = null
+
+// nodes
+let gainNode_tgl = null
+
+// elements
+const onoffButton_tgl = document.querySelector("#onoff_tgl")
+const volume_tgl = document.querySelector("#volume_tgl")
+
+// idunno
+let patch_tgl = null
+let stream_tgl = null
+let webpdNode_tgl = null
+let isPlaying_tgl = false
+
+const initApp_tgl = async () => {
+  stream_tgl = await navigator.mediaDevices.getUserMedia({ audio: true })
+  audioContext_tgl = new AudioContext()
+  await WebPdRuntime.registerWebPdWorkletNode(audioContext_tgl)
+  response = await fetch("tgl.wasm")
+  patch_tgl = await response.arrayBuffer()
+  onoffButton_tgl.style.display = 'block'
+  onoffButton_tgl.innerText = 'start patch'
+  inputs_tgl.style.display = 'none'
+}
+
+const initVolume_tgl = () => {
+  const init_vol = 0.5
+  gainNode_tgl.gain.setValueAtTime(init_vol, audioContext_tgl.currentTime)
+  volume_tgl.value = init_vol
+}
+
+
+const initTgl_tgl_0 = () => {
+}
+
+
+const startApp_tgl = async () => {
+  if (audioContext_tgl.state === 'suspended') {
+    audioContext_tgl.resume()
+  }
+  const sourceNode = audioContext_tgl.createMediaStreamSource(stream_tgl)
+  webpdNode_tgl = new WebPdRuntime.WebPdWorkletNode(audioContext_tgl)
+  gainNode_tgl = audioContext_tgl.createGain()
+  sourceNode.connect(webpdNode_tgl).connect(gainNode_tgl).connect(audioContext_tgl.destination)
+  webpdNode_tgl.port.onmessage = (message) => WebPdRuntime.fs.web(webpdNode_tgl, message)
+  webpdNode_tgl.port.postMessage({
+    type: 'code:WASM',
+    payload: {
+      wasmBuffer: patch_tgl,
+    },
+  })
+
+  initVolume_tgl()
+  
+initTgl_tgl_0()
+
+  isPlaying_tgl = true
+  onoffButton_tgl.innerText = 'stop patch'
+  inputs_tgl.style.display = 'block'
+}
+
+const stopApp_tgl = () => {
+  webpdNode_tgl.disconnect(gainNode_tgl)
+  gainNode_tgl.disconnect(audioContext_tgl.destination)
+  audioContext_tgl.suspend()
+
+  onoffButton_tgl.innerText = 'start patch'
+  isPlaying_tgl = false
+  inputs_tgl.style.display = 'none'
+}
+
+onoffButton_tgl.onclick = () => {
+  if (isPlaying_tgl) {
+    stopApp_tgl()
+  } else {
+    startApp_tgl()
+  }
+}
+
+initApp_tgl().
+  then(() => {
+    console.log('_tgl patch wasm initialized')
+})
+const sendMsgToWebPd_tgl = (nodeId, portletId, message) => {
+  webpdNode_tgl.port.postMessage({
+    type: 'inletCaller',
+    payload: {
+      nodeId,
+      portletId,
+      message,
+    },
+  })
+}
+
+
+const tgl_tgl_0 = document.querySelector("#tgl_tgl_0")
+tgl_tgl_0.onclick = () => {
+  
+sendMsgToWebPd_tgl("n_0_0", "0", [tgl_tgl_0.checked ? 1 : 0]);
+
+}
+
+volume_tgl.oninput = (e) => {
+  const gainValue = Number(e.target.value)
+  gainNode_tgl.gain.setValueAtTime(gainValue, audioContext_tgl.currentTime)
+}
+</script>
+</p>
+<h1>Vradio</h1>
+<p>
+<style>
+#vradio {
+  background-color: #eee;
+  padding: 4px;
+}
+#onoff_vradio {
+  margin: 4px 4px 4px 0;
+}
+</style>
+<div id="vradio">
+  <div> vradio.pd patch demo</div>
+  <button id="onoff_vradio"> loading... </button>
+  <div id="inputs_vradio">
+    <div>
+      - volume:
+      <input id="volume_vradio" type="range" min="0" max="1" step="0.01" value="0.5"> </input>
+    </div>
+    
+<div>
+  - vradio:
+  
+  <input type="radio" id="vradio_vradio_0_0" name="vradio_vradio_0" value="0"></input>
+  ,
+  <input type="radio" id="vradio_vradio_0_1" name="vradio_vradio_0" value="1"></input>
+  ,
+  <input type="radio" id="vradio_vradio_0_2" name="vradio_vradio_0" value="2"></input>
+  ,
+  <input type="radio" id="vradio_vradio_0_3" name="vradio_vradio_0" value="3"></input>
+  ,
+  <input type="radio" id="vradio_vradio_0_4" name="vradio_vradio_0" value="4"></input>
+  ,
+  <input type="radio" id="vradio_vradio_0_5" name="vradio_vradio_0" value="5"></input>
+  ,
+  <input type="radio" id="vradio_vradio_0_6" name="vradio_vradio_0" value="6"></input>
+  ,
+  <input type="radio" id="vradio_vradio_0_7" name="vradio_vradio_0" value="7"></input>
+  
+</div>
+
+  </div>
+</div>
+<script>
+let audioContext_vradio = null
+
+// nodes
+let gainNode_vradio = null
+
+// elements
+const onoffButton_vradio = document.querySelector("#onoff_vradio")
+const volume_vradio = document.querySelector("#volume_vradio")
+
+// idunno
+let patch_vradio = null
+let stream_vradio = null
+let webpdNode_vradio = null
+let isPlaying_vradio = false
+
+const initApp_vradio = async () => {
+  stream_vradio = await navigator.mediaDevices.getUserMedia({ audio: true })
+  audioContext_vradio = new AudioContext()
+  await WebPdRuntime.registerWebPdWorkletNode(audioContext_vradio)
+  response = await fetch("vradio.wasm")
+  patch_vradio = await response.arrayBuffer()
+  onoffButton_vradio.style.display = 'block'
+  onoffButton_vradio.innerText = 'start patch'
+  inputs_vradio.style.display = 'none'
+}
+
+const initVolume_vradio = () => {
+  const init_vol = 0.5
+  gainNode_vradio.gain.setValueAtTime(init_vol, audioContext_vradio.currentTime)
+  volume_vradio.value = init_vol
+}
+
+
+const initVradio_vradio_0 = () => {
+}
+
+
+const startApp_vradio = async () => {
+  if (audioContext_vradio.state === 'suspended') {
+    audioContext_vradio.resume()
+  }
+  const sourceNode = audioContext_vradio.createMediaStreamSource(stream_vradio)
+  webpdNode_vradio = new WebPdRuntime.WebPdWorkletNode(audioContext_vradio)
+  gainNode_vradio = audioContext_vradio.createGain()
+  sourceNode.connect(webpdNode_vradio).connect(gainNode_vradio).connect(audioContext_vradio.destination)
+  webpdNode_vradio.port.onmessage = (message) => WebPdRuntime.fs.web(webpdNode_vradio, message)
+  webpdNode_vradio.port.postMessage({
+    type: 'code:WASM',
+    payload: {
+      wasmBuffer: patch_vradio,
+    },
+  })
+
+  initVolume_vradio()
+  
+initVradio_vradio_0()
+
+  isPlaying_vradio = true
+  onoffButton_vradio.innerText = 'stop patch'
+  inputs_vradio.style.display = 'block'
+}
+
+const stopApp_vradio = () => {
+  webpdNode_vradio.disconnect(gainNode_vradio)
+  gainNode_vradio.disconnect(audioContext_vradio.destination)
+  audioContext_vradio.suspend()
+
+  onoffButton_vradio.innerText = 'start patch'
+  isPlaying_vradio = false
+  inputs_vradio.style.display = 'none'
+}
+
+onoffButton_vradio.onclick = () => {
+  if (isPlaying_vradio) {
+    stopApp_vradio()
+  } else {
+    startApp_vradio()
+  }
+}
+
+initApp_vradio().
+  then(() => {
+    console.log('_vradio patch wasm initialized')
+})
+const sendMsgToWebPd_vradio = (nodeId, portletId, message) => {
+  webpdNode_vradio.port.postMessage({
+    type: 'inletCaller',
+    payload: {
+      nodeId,
+      portletId,
+      message,
+    },
+  })
+}
+
+
+
+const vradio_vradio_0_0 = document.querySelector("#vradio_vradio_0_0")
+vradio_vradio_0_0.onclick = () => {
+  const e = {
+    target: {
+      value: 0
+    }
+  }
+  
+sendMsgToWebPd_vradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const vradio_vradio_0_1 = document.querySelector("#vradio_vradio_0_1")
+vradio_vradio_0_1.onclick = () => {
+  const e = {
+    target: {
+      value: 1
+    }
+  }
+  
+sendMsgToWebPd_vradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const vradio_vradio_0_2 = document.querySelector("#vradio_vradio_0_2")
+vradio_vradio_0_2.onclick = () => {
+  const e = {
+    target: {
+      value: 2
+    }
+  }
+  
+sendMsgToWebPd_vradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const vradio_vradio_0_3 = document.querySelector("#vradio_vradio_0_3")
+vradio_vradio_0_3.onclick = () => {
+  const e = {
+    target: {
+      value: 3
+    }
+  }
+  
+sendMsgToWebPd_vradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const vradio_vradio_0_4 = document.querySelector("#vradio_vradio_0_4")
+vradio_vradio_0_4.onclick = () => {
+  const e = {
+    target: {
+      value: 4
+    }
+  }
+  
+sendMsgToWebPd_vradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const vradio_vradio_0_5 = document.querySelector("#vradio_vradio_0_5")
+vradio_vradio_0_5.onclick = () => {
+  const e = {
+    target: {
+      value: 5
+    }
+  }
+  
+sendMsgToWebPd_vradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const vradio_vradio_0_6 = document.querySelector("#vradio_vradio_0_6")
+vradio_vradio_0_6.onclick = () => {
+  const e = {
+    target: {
+      value: 6
+    }
+  }
+  
+sendMsgToWebPd_vradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const vradio_vradio_0_7 = document.querySelector("#vradio_vradio_0_7")
+vradio_vradio_0_7.onclick = () => {
+  const e = {
+    target: {
+      value: 7
+    }
+  }
+  
+sendMsgToWebPd_vradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+volume_vradio.oninput = (e) => {
+  const gainValue = Number(e.target.value)
+  gainNode_vradio.gain.setValueAtTime(gainValue, audioContext_vradio.currentTime)
+}
+</script>
+</p>
+<h1>Hradio</h1>
+<p>
+<style>
+#hradio {
+  background-color: #eee;
+  padding: 4px;
+}
+#onoff_hradio {
+  margin: 4px 4px 4px 0;
+}
+</style>
+<div id="hradio">
+  <div> hradio.pd patch demo</div>
+  <button id="onoff_hradio"> loading... </button>
+  <div id="inputs_hradio">
+    <div>
+      - volume:
+      <input id="volume_hradio" type="range" min="0" max="1" step="0.01" value="0.5"> </input>
+    </div>
+    
+<div>
+  - hradio:
+  
+  <input type="radio" id="hradio_hradio_0_0" name="hradio_hradio_0" value="0"></input>
+  ,
+  <input type="radio" id="hradio_hradio_0_1" name="hradio_hradio_0" value="1"></input>
+  ,
+  <input type="radio" id="hradio_hradio_0_2" name="hradio_hradio_0" value="2"></input>
+  ,
+  <input type="radio" id="hradio_hradio_0_3" name="hradio_hradio_0" value="3"></input>
+  ,
+  <input type="radio" id="hradio_hradio_0_4" name="hradio_hradio_0" value="4"></input>
+  ,
+  <input type="radio" id="hradio_hradio_0_5" name="hradio_hradio_0" value="5"></input>
+  ,
+  <input type="radio" id="hradio_hradio_0_6" name="hradio_hradio_0" value="6"></input>
+  ,
+  <input type="radio" id="hradio_hradio_0_7" name="hradio_hradio_0" value="7"></input>
+  ,
+  <input type="radio" id="hradio_hradio_0_8" name="hradio_hradio_0" value="8"></input>
+  ,
+  <input type="radio" id="hradio_hradio_0_9" name="hradio_hradio_0" value="9"></input>
+  ,
+  <input type="radio" id="hradio_hradio_0_10" name="hradio_hradio_0" value="10"></input>
+  ,
+  <input type="radio" id="hradio_hradio_0_11" name="hradio_hradio_0" value="11"></input>
+  ,
+  <input type="radio" id="hradio_hradio_0_12" name="hradio_hradio_0" value="12"></input>
+  ,
+  <input type="radio" id="hradio_hradio_0_13" name="hradio_hradio_0" value="13"></input>
+  ,
+  <input type="radio" id="hradio_hradio_0_14" name="hradio_hradio_0" value="14"></input>
+  ,
+  <input type="radio" id="hradio_hradio_0_15" name="hradio_hradio_0" value="15"></input>
+  ,
+  <input type="radio" id="hradio_hradio_0_16" name="hradio_hradio_0" value="16"></input>
+  ,
+  <input type="radio" id="hradio_hradio_0_17" name="hradio_hradio_0" value="17"></input>
+  ,
+  <input type="radio" id="hradio_hradio_0_18" name="hradio_hradio_0" value="18"></input>
+  ,
+  <input type="radio" id="hradio_hradio_0_19" name="hradio_hradio_0" value="19"></input>
+  ,
+  <input type="radio" id="hradio_hradio_0_20" name="hradio_hradio_0" value="20"></input>
+  ,
+  <input type="radio" id="hradio_hradio_0_21" name="hradio_hradio_0" value="21"></input>
+  ,
+  <input type="radio" id="hradio_hradio_0_22" name="hradio_hradio_0" value="22"></input>
+  ,
+  <input type="radio" id="hradio_hradio_0_23" name="hradio_hradio_0" value="23"></input>
+  ,
+  <input type="radio" id="hradio_hradio_0_24" name="hradio_hradio_0" value="24"></input>
+  ,
+  <input type="radio" id="hradio_hradio_0_25" name="hradio_hradio_0" value="25"></input>
+  ,
+  <input type="radio" id="hradio_hradio_0_26" name="hradio_hradio_0" value="26"></input>
+  ,
+  <input type="radio" id="hradio_hradio_0_27" name="hradio_hradio_0" value="27"></input>
+  ,
+  <input type="radio" id="hradio_hradio_0_28" name="hradio_hradio_0" value="28"></input>
+  ,
+  <input type="radio" id="hradio_hradio_0_29" name="hradio_hradio_0" value="29"></input>
+  ,
+  <input type="radio" id="hradio_hradio_0_30" name="hradio_hradio_0" value="30"></input>
+  ,
+  <input type="radio" id="hradio_hradio_0_31" name="hradio_hradio_0" value="31"></input>
+  
+</div>
+
+  </div>
+</div>
+<script>
+let audioContext_hradio = null
+
+// nodes
+let gainNode_hradio = null
+
+// elements
+const onoffButton_hradio = document.querySelector("#onoff_hradio")
+const volume_hradio = document.querySelector("#volume_hradio")
+
+// idunno
+let patch_hradio = null
+let stream_hradio = null
+let webpdNode_hradio = null
+let isPlaying_hradio = false
+
+const initApp_hradio = async () => {
+  stream_hradio = await navigator.mediaDevices.getUserMedia({ audio: true })
+  audioContext_hradio = new AudioContext()
+  await WebPdRuntime.registerWebPdWorkletNode(audioContext_hradio)
+  response = await fetch("hradio.wasm")
+  patch_hradio = await response.arrayBuffer()
+  onoffButton_hradio.style.display = 'block'
+  onoffButton_hradio.innerText = 'start patch'
+  inputs_hradio.style.display = 'none'
+}
+
+const initVolume_hradio = () => {
+  const init_vol = 0.5
+  gainNode_hradio.gain.setValueAtTime(init_vol, audioContext_hradio.currentTime)
+  volume_hradio.value = init_vol
+}
+
+
+const initHradio_hradio_0 = () => {
+}
+
+
+const startApp_hradio = async () => {
+  if (audioContext_hradio.state === 'suspended') {
+    audioContext_hradio.resume()
+  }
+  const sourceNode = audioContext_hradio.createMediaStreamSource(stream_hradio)
+  webpdNode_hradio = new WebPdRuntime.WebPdWorkletNode(audioContext_hradio)
+  gainNode_hradio = audioContext_hradio.createGain()
+  sourceNode.connect(webpdNode_hradio).connect(gainNode_hradio).connect(audioContext_hradio.destination)
+  webpdNode_hradio.port.onmessage = (message) => WebPdRuntime.fs.web(webpdNode_hradio, message)
+  webpdNode_hradio.port.postMessage({
+    type: 'code:WASM',
+    payload: {
+      wasmBuffer: patch_hradio,
+    },
+  })
+
+  initVolume_hradio()
+  
+initHradio_hradio_0()
+
+  isPlaying_hradio = true
+  onoffButton_hradio.innerText = 'stop patch'
+  inputs_hradio.style.display = 'block'
+}
+
+const stopApp_hradio = () => {
+  webpdNode_hradio.disconnect(gainNode_hradio)
+  gainNode_hradio.disconnect(audioContext_hradio.destination)
+  audioContext_hradio.suspend()
+
+  onoffButton_hradio.innerText = 'start patch'
+  isPlaying_hradio = false
+  inputs_hradio.style.display = 'none'
+}
+
+onoffButton_hradio.onclick = () => {
+  if (isPlaying_hradio) {
+    stopApp_hradio()
+  } else {
+    startApp_hradio()
+  }
+}
+
+initApp_hradio().
+  then(() => {
+    console.log('_hradio patch wasm initialized')
+})
+const sendMsgToWebPd_hradio = (nodeId, portletId, message) => {
+  webpdNode_hradio.port.postMessage({
+    type: 'inletCaller',
+    payload: {
+      nodeId,
+      portletId,
+      message,
+    },
+  })
+}
+
+
+
+const hradio_hradio_0_0 = document.querySelector("#hradio_hradio_0_0")
+hradio_hradio_0_0.onclick = () => {
+  const e = {
+    target: {
+      value: 0
+    }
+  }
+  
+sendMsgToWebPd_hradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const hradio_hradio_0_1 = document.querySelector("#hradio_hradio_0_1")
+hradio_hradio_0_1.onclick = () => {
+  const e = {
+    target: {
+      value: 1
+    }
+  }
+  
+sendMsgToWebPd_hradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const hradio_hradio_0_2 = document.querySelector("#hradio_hradio_0_2")
+hradio_hradio_0_2.onclick = () => {
+  const e = {
+    target: {
+      value: 2
+    }
+  }
+  
+sendMsgToWebPd_hradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const hradio_hradio_0_3 = document.querySelector("#hradio_hradio_0_3")
+hradio_hradio_0_3.onclick = () => {
+  const e = {
+    target: {
+      value: 3
+    }
+  }
+  
+sendMsgToWebPd_hradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const hradio_hradio_0_4 = document.querySelector("#hradio_hradio_0_4")
+hradio_hradio_0_4.onclick = () => {
+  const e = {
+    target: {
+      value: 4
+    }
+  }
+  
+sendMsgToWebPd_hradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const hradio_hradio_0_5 = document.querySelector("#hradio_hradio_0_5")
+hradio_hradio_0_5.onclick = () => {
+  const e = {
+    target: {
+      value: 5
+    }
+  }
+  
+sendMsgToWebPd_hradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const hradio_hradio_0_6 = document.querySelector("#hradio_hradio_0_6")
+hradio_hradio_0_6.onclick = () => {
+  const e = {
+    target: {
+      value: 6
+    }
+  }
+  
+sendMsgToWebPd_hradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const hradio_hradio_0_7 = document.querySelector("#hradio_hradio_0_7")
+hradio_hradio_0_7.onclick = () => {
+  const e = {
+    target: {
+      value: 7
+    }
+  }
+  
+sendMsgToWebPd_hradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const hradio_hradio_0_8 = document.querySelector("#hradio_hradio_0_8")
+hradio_hradio_0_8.onclick = () => {
+  const e = {
+    target: {
+      value: 8
+    }
+  }
+  
+sendMsgToWebPd_hradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const hradio_hradio_0_9 = document.querySelector("#hradio_hradio_0_9")
+hradio_hradio_0_9.onclick = () => {
+  const e = {
+    target: {
+      value: 9
+    }
+  }
+  
+sendMsgToWebPd_hradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const hradio_hradio_0_10 = document.querySelector("#hradio_hradio_0_10")
+hradio_hradio_0_10.onclick = () => {
+  const e = {
+    target: {
+      value: 10
+    }
+  }
+  
+sendMsgToWebPd_hradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const hradio_hradio_0_11 = document.querySelector("#hradio_hradio_0_11")
+hradio_hradio_0_11.onclick = () => {
+  const e = {
+    target: {
+      value: 11
+    }
+  }
+  
+sendMsgToWebPd_hradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const hradio_hradio_0_12 = document.querySelector("#hradio_hradio_0_12")
+hradio_hradio_0_12.onclick = () => {
+  const e = {
+    target: {
+      value: 12
+    }
+  }
+  
+sendMsgToWebPd_hradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const hradio_hradio_0_13 = document.querySelector("#hradio_hradio_0_13")
+hradio_hradio_0_13.onclick = () => {
+  const e = {
+    target: {
+      value: 13
+    }
+  }
+  
+sendMsgToWebPd_hradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const hradio_hradio_0_14 = document.querySelector("#hradio_hradio_0_14")
+hradio_hradio_0_14.onclick = () => {
+  const e = {
+    target: {
+      value: 14
+    }
+  }
+  
+sendMsgToWebPd_hradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const hradio_hradio_0_15 = document.querySelector("#hradio_hradio_0_15")
+hradio_hradio_0_15.onclick = () => {
+  const e = {
+    target: {
+      value: 15
+    }
+  }
+  
+sendMsgToWebPd_hradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const hradio_hradio_0_16 = document.querySelector("#hradio_hradio_0_16")
+hradio_hradio_0_16.onclick = () => {
+  const e = {
+    target: {
+      value: 16
+    }
+  }
+  
+sendMsgToWebPd_hradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const hradio_hradio_0_17 = document.querySelector("#hradio_hradio_0_17")
+hradio_hradio_0_17.onclick = () => {
+  const e = {
+    target: {
+      value: 17
+    }
+  }
+  
+sendMsgToWebPd_hradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const hradio_hradio_0_18 = document.querySelector("#hradio_hradio_0_18")
+hradio_hradio_0_18.onclick = () => {
+  const e = {
+    target: {
+      value: 18
+    }
+  }
+  
+sendMsgToWebPd_hradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const hradio_hradio_0_19 = document.querySelector("#hradio_hradio_0_19")
+hradio_hradio_0_19.onclick = () => {
+  const e = {
+    target: {
+      value: 19
+    }
+  }
+  
+sendMsgToWebPd_hradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const hradio_hradio_0_20 = document.querySelector("#hradio_hradio_0_20")
+hradio_hradio_0_20.onclick = () => {
+  const e = {
+    target: {
+      value: 20
+    }
+  }
+  
+sendMsgToWebPd_hradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const hradio_hradio_0_21 = document.querySelector("#hradio_hradio_0_21")
+hradio_hradio_0_21.onclick = () => {
+  const e = {
+    target: {
+      value: 21
+    }
+  }
+  
+sendMsgToWebPd_hradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const hradio_hradio_0_22 = document.querySelector("#hradio_hradio_0_22")
+hradio_hradio_0_22.onclick = () => {
+  const e = {
+    target: {
+      value: 22
+    }
+  }
+  
+sendMsgToWebPd_hradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const hradio_hradio_0_23 = document.querySelector("#hradio_hradio_0_23")
+hradio_hradio_0_23.onclick = () => {
+  const e = {
+    target: {
+      value: 23
+    }
+  }
+  
+sendMsgToWebPd_hradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const hradio_hradio_0_24 = document.querySelector("#hradio_hradio_0_24")
+hradio_hradio_0_24.onclick = () => {
+  const e = {
+    target: {
+      value: 24
+    }
+  }
+  
+sendMsgToWebPd_hradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const hradio_hradio_0_25 = document.querySelector("#hradio_hradio_0_25")
+hradio_hradio_0_25.onclick = () => {
+  const e = {
+    target: {
+      value: 25
+    }
+  }
+  
+sendMsgToWebPd_hradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const hradio_hradio_0_26 = document.querySelector("#hradio_hradio_0_26")
+hradio_hradio_0_26.onclick = () => {
+  const e = {
+    target: {
+      value: 26
+    }
+  }
+  
+sendMsgToWebPd_hradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const hradio_hradio_0_27 = document.querySelector("#hradio_hradio_0_27")
+hradio_hradio_0_27.onclick = () => {
+  const e = {
+    target: {
+      value: 27
+    }
+  }
+  
+sendMsgToWebPd_hradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const hradio_hradio_0_28 = document.querySelector("#hradio_hradio_0_28")
+hradio_hradio_0_28.onclick = () => {
+  const e = {
+    target: {
+      value: 28
+    }
+  }
+  
+sendMsgToWebPd_hradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const hradio_hradio_0_29 = document.querySelector("#hradio_hradio_0_29")
+hradio_hradio_0_29.onclick = () => {
+  const e = {
+    target: {
+      value: 29
+    }
+  }
+  
+sendMsgToWebPd_hradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const hradio_hradio_0_30 = document.querySelector("#hradio_hradio_0_30")
+hradio_hradio_0_30.onclick = () => {
+  const e = {
+    target: {
+      value: 30
+    }
+  }
+  
+sendMsgToWebPd_hradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+const hradio_hradio_0_31 = document.querySelector("#hradio_hradio_0_31")
+hradio_hradio_0_31.onclick = () => {
+  const e = {
+    target: {
+      value: 31
+    }
+  }
+  
+sendMsgToWebPd_hradio("n_0_0", "0", [Number(e.target.value)]);
+
+}
+
+
+volume_hradio.oninput = (e) => {
+  const gainValue = Number(e.target.value)
+  gainNode_hradio.gain.setValueAtTime(gainValue, audioContext_hradio.currentTime)
+}
+</script>
+</p>
+<p>
+<style>
+#msg {
+  background-color: #eee;
+  padding: 4px;
+}
+#onoff_msg {
+  margin: 4px 4px 4px 0;
+}
+</style>
+<div id="msg">
+  <div> msg.pd patch demo</div>
+  <button id="onoff_msg"> loading... </button>
+  <div id="inputs_msg">
+    <div>
+      - volume:
+      <input id="volume_msg" type="range" min="0" max="1" step="0.01" value="0.5"> </input>
+    </div>
+    
+<div>
+  - msg!!!!:
+  <button id="msg_msg_0"> send </button>
+</div>
+
+  </div>
+</div>
+<script>
+let audioContext_msg = null
+
+// nodes
+let gainNode_msg = null
+
+// elements
+const onoffButton_msg = document.querySelector("#onoff_msg")
+const volume_msg = document.querySelector("#volume_msg")
+
+// idunno
+let patch_msg = null
+let stream_msg = null
+let webpdNode_msg = null
+let isPlaying_msg = false
+
+const initApp_msg = async () => {
+  stream_msg = await navigator.mediaDevices.getUserMedia({ audio: true })
+  audioContext_msg = new AudioContext()
+  await WebPdRuntime.registerWebPdWorkletNode(audioContext_msg)
+  response = await fetch("msg.wasm")
+  patch_msg = await response.arrayBuffer()
+  onoffButton_msg.style.display = 'block'
+  onoffButton_msg.innerText = 'start patch'
+  inputs_msg.style.display = 'none'
+}
+
+const initVolume_msg = () => {
+  const init_vol = 0.5
+  gainNode_msg.gain.setValueAtTime(init_vol, audioContext_msg.currentTime)
+  volume_msg.value = init_vol
+}
+
+
+const initMsg_msg_0 = () => {
+}
+
+
+const startApp_msg = async () => {
+  if (audioContext_msg.state === 'suspended') {
+    audioContext_msg.resume()
+  }
+  const sourceNode = audioContext_msg.createMediaStreamSource(stream_msg)
+  webpdNode_msg = new WebPdRuntime.WebPdWorkletNode(audioContext_msg)
+  gainNode_msg = audioContext_msg.createGain()
+  sourceNode.connect(webpdNode_msg).connect(gainNode_msg).connect(audioContext_msg.destination)
+  webpdNode_msg.port.onmessage = (message) => WebPdRuntime.fs.web(webpdNode_msg, message)
+  webpdNode_msg.port.postMessage({
+    type: 'code:WASM',
+    payload: {
+      wasmBuffer: patch_msg,
+    },
+  })
+
+  initVolume_msg()
+  
+initMsg_msg_0()
+
+  isPlaying_msg = true
+  onoffButton_msg.innerText = 'stop patch'
+  inputs_msg.style.display = 'block'
+}
+
+const stopApp_msg = () => {
+  webpdNode_msg.disconnect(gainNode_msg)
+  gainNode_msg.disconnect(audioContext_msg.destination)
+  audioContext_msg.suspend()
+
+  onoffButton_msg.innerText = 'start patch'
+  isPlaying_msg = false
+  inputs_msg.style.display = 'none'
+}
+
+onoffButton_msg.onclick = () => {
+  if (isPlaying_msg) {
+    stopApp_msg()
+  } else {
+    startApp_msg()
+  }
+}
+
+initApp_msg().
+  then(() => {
+    console.log('_msg patch wasm initialized')
+})
+const sendMsgToWebPd_msg = (nodeId, portletId, message) => {
+  webpdNode_msg.port.postMessage({
+    type: 'inletCaller',
+    payload: {
+      nodeId,
+      portletId,
+      message,
+    },
+  })
+}
+
+
+const msg_msg_0 = document.querySelector("#msg_msg_0")
+msg_msg_0.onclick = () => {
+  
+sendMsgToWebPd_msg("n_0_0", "0", ["bang"]);
+
+}
+
+volume_msg.oninput = (e) => {
+  const gainValue = Number(e.target.value)
+  gainNode_msg.gain.setValueAtTime(gainValue, audioContext_msg.currentTime)
+}
+</script>
+</p>
 
       </div>
     
